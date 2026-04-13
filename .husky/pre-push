@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+# ============================================================
+# PRE-PUSH HOOK — AgriConnect Market
+# ============================================================
+# 1. Blocks direct pushes to main and dev branches
+# 2. Enforces branch naming convention:
+#    users/<name>/<type>/<description>
+#    where type = feature|bugfix|fix|chore|hotfix|refactor|docs|test|ci
+# 3. Runs lint and tests — push is rejected if they fail
+# ============================================================
+
+CURRENT_BRANCH=$(git symbolic-ref HEAD 2>/dev/null | sed 's|refs/heads/||')
+
+# --- Block direct push to protected branches ---
+PROTECTED_BRANCHES="^(main|dev|develop|master)$"
+
+if echo "$CURRENT_BRANCH" | grep -qE "$PROTECTED_BRANCHES"; then
+  echo ""
+  echo "🚫 PUSH REJECTED"
+  echo "   Direct pushes to '$CURRENT_BRANCH' are not allowed."
+  echo "   Create a feature branch and open a pull request instead."
+  echo ""
+  echo "   Branch naming format:"
+  echo "   users/<your-name>/<type>/<short-description>"
+  echo ""
+  echo "   Types: feature | bugfix | fix | chore | hotfix | refactor | docs | test | ci"
+  echo ""
+  echo "   Example:"
+  echo "   git checkout -b users/enoch/feature/add-farmer-registration"
+  echo ""
+  exit 1
+fi
+
+# --- Enforce branch naming convention ---
+BRANCH_REGEX="^users\/[a-z0-9._-]+\/(feature|bugfix|fix|chore|hotfix|refactor|docs|test|ci)\/[a-z0-9._-]+$"
+
+if ! echo "$CURRENT_BRANCH" | grep -qE "$BRANCH_REGEX"; then
+  echo ""
+  echo "🚫 PUSH REJECTED — Invalid branch name: '$CURRENT_BRANCH'"
+  echo ""
+  echo "   Required format:"
+  echo "   users/<your-name>/<type>/<short-description>"
+  echo ""
+  echo "   Types: feature | bugfix | fix | chore | hotfix | refactor | docs | test | ci"
+  echo ""
+  echo "   Examples:"
+  echo "   users/enoch/feature/add-farmer-registration"
+  echo "   users/amina/bugfix/fix-listing-crash"
+  echo "   users/kola/chore/update-dependencies"
+  echo ""
+  exit 1
+fi
+
+# --- Run lint ---
+echo "🔍 Running lint checks..."
+npx eslint "mobile/**/*.{ts,tsx}" "backend/src/**/*.ts" 2>/dev/null
+LINT_EXIT=$?
+if [ $LINT_EXIT -ne 0 ]; then
+  echo ""
+  echo "🚫 PUSH REJECTED — Lint checks failed."
+  echo "   Fix lint errors before pushing."
+  echo ""
+  exit 1
+fi
+
+# --- Run backend tests ---
+echo "🧪 Running tests..."
+cd backend && npm test 2>/dev/null
+TEST_EXIT=$?
+cd ..
+if [ $TEST_EXIT -ne 0 ]; then
+  echo ""
+  echo "🚫 PUSH REJECTED — Tests failed."
+  echo "   Fix failing tests before pushing."
+  echo ""
+  exit 1
+fi
+
+echo "✅ All checks passed. Pushing..."
+exit 0
