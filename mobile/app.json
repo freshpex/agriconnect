@@ -1,16 +1,17 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "AgriConnect Market",
+    "slug": "agriconnect-market",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "agriconnect",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#16a34a"
     },
     "ios": {
       "supportsTablet": true
@@ -18,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#16a34a"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
@@ -27,10 +28,21 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
+      "apiUrl": "https://your-api.onrender.com/api",
       "eas": {
         "projectId": "8a7bfbfc-836c-4ad9-bd6f-563485ef214c"
       }
     },
-    "owner": "hackere"
+    "owner": "hackere",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AgriConnect needs your location to verify your farm and show nearby listings."
+        }
+      ]
+    ]
   }
 }
