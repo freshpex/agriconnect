@@ -1,0 +1,11 @@
+{
+  "name": "agriconnect-assets",
+  "version": "1.0.0",
+  "description": "Asset generation script for AgriConnect Market",
+  "scripts": {
+    "generate": "node generate-assets.js"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}
