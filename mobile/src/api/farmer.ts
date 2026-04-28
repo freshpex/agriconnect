@@ -11,6 +11,13 @@ export const farmerApi = {
     return api.put<{ user: User }>("/farmers/profile", data);
   },
 
+  requestFarmerAccess(data: { note?: string }) {
+    return api.post<{ message: string; user: User }>(
+      "/farmers/request-farmer-access",
+      data
+    );
+  },
+
   verifyKyc(data: {
     nationalId: string;
     fullName: string;

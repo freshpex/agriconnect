@@ -1,9 +1,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle2,
   LocateFixed,
   MapPin,
+  PackagePlus,
   Phone,
   Save,
   ShieldCheck,
@@ -12,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../state/AuthContext";
 import {
+  useRequestFarmerAccess,
   useUpdateProfile,
   useVerifyKyc,
   useVerifyLocation,
@@ -20,13 +23,15 @@ import {
 import { Alert } from "../components/ui/Alert";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
+import { Input, TextArea } from "../components/ui/Input";
 import { Spinner } from "../components/ui/Spinner";
 import { getApiError } from "../utils/format";
 
 export function ProfilePage() {
   const { user, isLoading } = useAuth();
+  const [searchParams] = useSearchParams();
   const updateProfile = useUpdateProfile();
+  const requestFarmerAccess = useRequestFarmerAccess();
   const verifyKyc = useVerifyKyc();
   const verifyNumber = useVerifyNumber();
   const verifyLocation = useVerifyLocation();
@@ -42,6 +47,7 @@ export function ProfilePage() {
     longitude: "",
     radius: "5000",
   });
+  const [farmerAccessNote, setFarmerAccessNote] = useState("");
   const [message, setMessage] = useState<{
     type: "success" | "error" | "info";
     text: string;
@@ -63,7 +69,19 @@ export function ProfilePage() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user?.role === "buyer" && searchParams.get("farmerAccess")) {
+      setMessage({
+        type: "info",
+        text: "Only farmer accounts can manage listings. Request a farmer account type change below.",
+      });
+    }
+  }, [searchParams, user?.role]);
+
   if (isLoading || !user) return <Spinner label="Loading profile" />;
+
+  const farmerAccessRequest = user.accountTypeChangeRequest;
+  const farmerAccessPending = farmerAccessRequest?.status === "pending";
 
   async function saveProfile(event: FormEvent) {
     event.preventDefault();
@@ -74,6 +92,20 @@ export function ProfilePage() {
         farmAddress: profile.farmAddress.trim() || undefined,
       });
       setMessage({ type: "success", text: "Profile updated." });
+    } catch (err) {
+      setMessage({ type: "error", text: getApiError(err) });
+    }
+  }
+
+  async function submitFarmerAccessRequest(event: FormEvent) {
+    event.preventDefault();
+    setMessage(null);
+    try {
+      const response = await requestFarmerAccess.mutateAsync({
+        note: farmerAccessNote.trim() || undefined,
+      });
+      setFarmerAccessNote("");
+      setMessage({ type: "success", text: response.data.message });
     } catch (err) {
       setMessage({ type: "error", text: getApiError(err) });
     }
@@ -180,6 +212,71 @@ export function ProfilePage() {
       </section>
 
       {message ? <Alert type={message.type}>{message.text}</Alert> : null}
+
+      {user.role === "buyer" ? (
+        <form
+          onSubmit={submitFarmerAccessRequest}
+          className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm sm:p-6"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex gap-3">
+              <div className="rounded-lg bg-leaf-50 p-3 text-leaf-700">
+                <PackagePlus className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-stone-950">
+                  Account type change
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-stone-500">
+                  Buyer accounts can purchase produce only. Request farmer
+                  access here if you need to create and manage produce
+                  listings.
+                </p>
+              </div>
+            </div>
+            {farmerAccessRequest ? (
+              <Badge
+                tone={
+                  farmerAccessRequest.status === "rejected" ? "red" : "amber"
+                }
+                className="capitalize"
+              >
+                {farmerAccessRequest.status}
+              </Badge>
+            ) : null}
+          </div>
+
+          {farmerAccessPending ? (
+            <Alert type="info" className="mt-5">
+              Your farmer access request is pending review. Listing tools will
+              stay locked until your account type is changed to farmer.
+            </Alert>
+          ) : (
+            <div className="mt-5 space-y-4">
+              {farmerAccessRequest?.status === "rejected" ? (
+                <Alert type="error">
+                  Your last farmer access request was rejected. You can submit a
+                  new request with more detail.
+                </Alert>
+              ) : null}
+              <TextArea
+                label="Request note"
+                maxLength={500}
+                value={farmerAccessNote}
+                onChange={(event) => setFarmerAccessNote(event.target.value)}
+                placeholder="Tell the team what crops or farm business you want to list."
+              />
+              <Button
+                type="submit"
+                icon={<PackagePlus className="h-4 w-4" />}
+                isLoading={requestFarmerAccess.isPending}
+              >
+                Request farmer access
+              </Button>
+            </div>
+          )}
+        </form>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <section className="space-y-6">

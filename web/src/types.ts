@@ -1,5 +1,15 @@
 export type Role = "farmer" | "buyer";
 
+export type AccountTypeChangeStatus = "pending" | "approved" | "rejected";
+
+export interface AccountTypeChangeRequest {
+  requestedRole: "farmer";
+  status: AccountTypeChangeStatus;
+  note?: string;
+  requestedAt?: string;
+  reviewedAt?: string;
+}
+
 export type CropCategory =
   | "grains"
   | "vegetables"
@@ -28,6 +38,7 @@ export interface User {
   name: string;
   phone: string;
   role: Role;
+  accountTypeChangeRequest?: AccountTypeChangeRequest;
   kycVerified?: boolean;
   simSwapChecked?: boolean;
   numberVerified?: boolean;

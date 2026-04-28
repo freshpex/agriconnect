@@ -48,6 +48,7 @@ export function ListingDetailPage() {
       typeof listing.farmer === "string" ? listing.farmer : listing.farmer?._id;
     return farmerId === user.id || farmerId === user._id;
   }, [listing, user]);
+  const canManageOwnListing = user?.role === "farmer" && isOwnListing;
 
   if (isLoading) return <Spinner label="Loading listing" />;
 
@@ -209,7 +210,7 @@ export function ListingDetailPage() {
       </section>
 
       <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-        {isOwnListing ? (
+        {canManageOwnListing ? (
           <div className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
             <h2 className="text-xl font-black text-stone-950">
               This is your listing

@@ -4,6 +4,7 @@ import { LocateFixed, Search, SlidersHorizontal, Store } from "lucide-react";
 import clsx from "clsx";
 import { CROP_CATEGORIES } from "../constants/crops";
 import { useListings } from "../hooks/useListings";
+import { useAuth } from "../state/AuthContext";
 import { ListingCard } from "../components/listings/ListingCard";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -16,6 +17,7 @@ import { getApiError } from "../utils/format";
 
 export function MarketplacePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<CropCategory | "">("");
   const [minPrice, setMinPrice] = useState("");
@@ -45,6 +47,7 @@ export function MarketplacePage() {
 
   const { data, isLoading, isFetching, isError, error, refetch } =
     useListings(filters);
+  const canManageListings = user?.role === "farmer";
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -226,12 +229,21 @@ export function MarketplacePage() {
                 ? "Refreshing..."
                 : `${data.pagination.total} listings found`}
             </p>
-            <Link
-              to="/my-listings/new"
-              className="text-sm font-bold text-leaf-700"
-            >
-              Create listing
-            </Link>
+            {canManageListings ? (
+              <Link
+                to="/my-listings/new"
+                className="text-sm font-bold text-leaf-700"
+              >
+                Create listing
+              </Link>
+            ) : (
+              <Link
+                to="/profile?farmerAccess=required"
+                className="text-sm font-bold text-leaf-700"
+              >
+                Request farmer access
+              </Link>
+            )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {data.listings.map((listing) => (
@@ -245,8 +257,15 @@ export function MarketplacePage() {
           title="No listings found"
           message="Try another search or clear filters. New listings will appear here as farmers publish them."
           action={{
-            label: "Create listing",
-            onClick: () => navigate("/my-listings/new"),
+            label: canManageListings
+              ? "Create listing"
+              : "Request farmer access",
+            onClick: () =>
+              navigate(
+                canManageListings
+                  ? "/my-listings/new"
+                  : "/profile?farmerAccess=required"
+              ),
           }}
         />
       )}

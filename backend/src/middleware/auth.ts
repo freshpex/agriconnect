@@ -40,7 +40,11 @@ export const authenticate = async (
       return;
     }
 
-    req.user = { id: decoded.id, phone: decoded.phone, role: decoded.role };
+    req.user = {
+      id: user._id.toString(),
+      phone: user.phone,
+      role: user.role,
+    };
     next();
   } catch {
     res.status(401).json({ error: "Invalid or expired token" });

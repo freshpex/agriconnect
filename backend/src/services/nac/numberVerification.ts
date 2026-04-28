@@ -1,7 +1,7 @@
 import config from "../../config";
 import { createNacClient } from "./client";
 
-const client = createNacClient(config.nac.hosts.numberVerification);
+const client = createNacClient(config.nac.services.numberVerification);
 
 export interface NumberVerifyResult {
   devicePhoneNumberVerified: boolean;
@@ -14,7 +14,7 @@ export interface NumberVerifyResult {
 export async function verifyNumber(
   phoneNumber: string
 ): Promise<NumberVerifyResult> {
-  const response = await client.post("/number-verification/v0/verify", {
+  const response = await client.post("/verify", {
     phoneNumber,
   });
   return response.data;

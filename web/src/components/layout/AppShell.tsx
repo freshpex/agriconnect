@@ -12,21 +12,46 @@ import {
 import clsx from "clsx";
 import { useState } from "react";
 import { useAuth } from "../../state/AuthContext";
+import type { Role } from "../../types";
 import { ApiStatus } from "./ApiStatus";
 import { LanguageSelector } from "./LanguageSelector";
+import { MobileAppPrompt } from "./MobileAppPrompt";
+import { PwaUpdatePrompt } from "./PwaUpdatePrompt";
 import { Button } from "../ui/Button";
 
-const navItems = [
+const navItems: Array<{
+  to: string;
+  label: string;
+  icon: typeof Home;
+  roles?: Role[];
+}> = [
   { to: "/", label: "Market", icon: Home },
-  { to: "/my-listings", label: "Listings", icon: PackagePlus },
+  {
+    to: "/my-listings",
+    label: "Listings",
+    icon: PackagePlus,
+    roles: ["farmer"],
+  },
   { to: "/orders", label: "Orders", icon: ClipboardList },
   { to: "/profile", label: "Profile", icon: UserRound },
 ];
 
-function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+function getVisibleNavItems(role?: Role) {
+  return navItems.filter(
+    (item) => !item.roles || Boolean(role && item.roles.includes(role))
+  );
+}
+
+function NavItems({
+  items,
+  onNavigate,
+}: {
+  items: typeof navItems;
+  onNavigate?: () => void;
+}) {
   return (
     <nav className="flex flex-col gap-1">
-      {navItems.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         return (
           <NavLink
@@ -56,6 +81,7 @@ export function AppShell() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const visibleNavItems = getVisibleNavItems(user?.role);
 
   function signOut() {
     logout();
@@ -81,7 +107,7 @@ export function AppShell() {
           </div>
 
           <div className="mt-8">
-            <NavItems />
+            <NavItems items={visibleNavItems} />
           </div>
 
           <div className="mt-auto rounded-lg border border-stone-200 bg-earth-50 p-4">
@@ -150,7 +176,10 @@ export function AppShell() {
               </button>
             </div>
             <div className="mt-8">
-              <NavItems onNavigate={() => setMobileNavOpen(false)} />
+              <NavItems
+                items={visibleNavItems}
+                onNavigate={() => setMobileNavOpen(false)}
+              />
             </div>
             <Button
               type="button"
@@ -169,9 +198,17 @@ export function AppShell() {
         <Outlet />
       </main>
 
+      <MobileAppPrompt />
+      <PwaUpdatePrompt />
+
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 px-2 py-2 shadow-soft backdrop-blur lg:hidden">
-        <div className="grid grid-cols-4 gap-1">
-          {navItems.map((item) => {
+        <div
+          className={clsx(
+            "grid gap-1",
+            visibleNavItems.length === 3 ? "grid-cols-3" : "grid-cols-4"
+          )}
+        >
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink

@@ -57,6 +57,7 @@ export const register = async (
       name: farmer.name,
       phone: farmer.phone,
       role: farmer.role,
+      accountTypeChangeRequest: farmer.accountTypeChangeRequest,
       kycVerified: farmer.kycVerified,
     },
   });
@@ -111,6 +112,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
       name: farmer.name,
       phone: farmer.phone,
       role: farmer.role,
+      accountTypeChangeRequest: farmer.accountTypeChangeRequest,
       kycVerified: farmer.kycVerified,
       simSwapChecked: farmer.simSwapChecked,
     },
@@ -127,6 +129,7 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
       name: farmer.name,
       phone: farmer.phone,
       role: farmer.role,
+      accountTypeChangeRequest: farmer.accountTypeChangeRequest,
       kycVerified: farmer.kycVerified,
       simSwapChecked: farmer.simSwapChecked,
       numberVerified: farmer.numberVerified,

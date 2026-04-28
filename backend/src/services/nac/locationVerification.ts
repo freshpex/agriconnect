@@ -1,7 +1,7 @@
 import config from "../../config";
 import { createNacClient } from "./client";
 
-const client = createNacClient(config.nac.hosts.locationVerification);
+const client = createNacClient(config.nac.services.locationVerification);
 
 export interface LocationVerifyRequest {
   device: {
@@ -44,9 +44,6 @@ export async function verifyLocation(
     maxAge: 3600,
   };
 
-  const response = await client.post(
-    "/location-verification/v0/verify",
-    payload
-  );
+  const response = await client.post("/verify", payload);
   return response.data;
 }

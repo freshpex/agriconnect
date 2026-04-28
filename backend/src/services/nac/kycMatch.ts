@@ -1,7 +1,7 @@
 import config from "../../config";
 import { createNacClient } from "./client";
 
-const client = createNacClient(config.nac.hosts.kycMatch);
+const client = createNacClient(config.nac.services.kycMatch);
 
 export interface KycMatchRequest {
   phoneNumber: string;
@@ -13,12 +13,12 @@ export interface KycMatchRequest {
 }
 
 export interface KycMatchResult {
-  phoneNumberMatch?: string;
-  idDocumentMatch?: string;
-  nameMatch?: string;
-  givenNameMatch?: string;
-  familyNameMatch?: string;
-  birthdateMatch?: string;
+  phoneNumberMatch?: string | boolean;
+  idDocumentMatch?: string | boolean;
+  nameMatch?: string | boolean;
+  givenNameMatch?: string | boolean;
+  familyNameMatch?: string | boolean;
+  birthdateMatch?: string | boolean;
 }
 
 /**
@@ -26,6 +26,6 @@ export interface KycMatchResult {
  * telco records. Returns match status for each field.
  */
 export async function matchKyc(data: KycMatchRequest): Promise<KycMatchResult> {
-  const response = await client.post("/kyc-match/v0/match", data);
+  const response = await client.post("/match", data);
   return response.data;
 }

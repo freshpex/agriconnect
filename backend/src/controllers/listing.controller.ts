@@ -17,6 +17,9 @@ export const createListing = async (
   // SIM Swap check before listing creation (per myidea.md requirement)
   const farmer = await Farmer.findById(req.user!.id);
   if (!farmer) throw new ApiError("User not found", 404);
+  if (farmer.role !== "farmer") {
+    throw new ApiError("Only farmer accounts can create listings", 403);
+  }
 
   try {
     const simResult = await checkSimSwap(farmer.phone, 24);

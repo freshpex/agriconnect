@@ -20,19 +20,32 @@ function wrapNacError(err: unknown): never {
     const msg =
       err.response?.data?.message ||
       err.response?.data?.error ||
+      err.response?.data?.detail ||
       "Nokia NaC API request failed";
     throw new NacApiError(msg, status);
   }
   throw err;
 }
 
-export function createNacClient(host: string): AxiosInstance {
+export interface NacServiceConfig {
+  baseUrl: string;
+  rapidApiHost: string;
+}
+
+export function createNacClient(service: NacServiceConfig): AxiosInstance {
+  if (!config.nac.apiKey) {
+    throw new NacApiError(
+      "Nokia Network as Code API key is not configured. Set NAC_APPLICATION_KEY, NAC_API_KEY, or NAC_RAPID_API_KEY.",
+      500
+    );
+  }
+
   const client = axios.create({
-    baseURL: `https://${host}`,
+    baseURL: service.baseUrl,
     headers: {
       "Content-Type": "application/json",
-      "X-RapidAPI-Key": config.nac.rapidApiKey,
-      "X-RapidAPI-Host": host,
+      "X-RapidAPI-Key": config.nac.apiKey,
+      "X-RapidAPI-Host": service.rapidApiHost,
     },
     timeout: 15000,
   });

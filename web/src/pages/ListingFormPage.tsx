@@ -17,6 +17,7 @@ import { Input, TextArea } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Alert } from "../components/ui/Alert";
 import { Spinner } from "../components/ui/Spinner";
+import { useAuth } from "../state/AuthContext";
 import type { CropCategory } from "../types";
 import { getApiError } from "../utils/format";
 
@@ -39,6 +40,7 @@ const emptyForm = {
 export function ListingFormPage({ mode }: { mode: "create" | "edit" }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: listing, isLoading } = useListing(
     mode === "edit" ? id : undefined
   );
@@ -117,6 +119,11 @@ export function ListingFormPage({ mode }: { mode: "create" | "edit" }) {
       return;
     }
 
+    if (user?.role !== "farmer") {
+      setMessage("Only farmer accounts can create or update listings.");
+      return;
+    }
+
     try {
       if (isEdit && id) {
         await updateListing.mutateAsync({
@@ -166,6 +173,11 @@ export function ListingFormPage({ mode }: { mode: "create" | "edit" }) {
     }
 
     try {
+      if (user?.role !== "farmer") {
+        setMessage("Only farmer accounts can deactivate listings.");
+        return;
+      }
+
       await deleteListing.mutateAsync(id);
       navigate("/my-listings");
     } catch (err) {

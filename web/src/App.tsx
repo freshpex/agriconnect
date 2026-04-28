@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
 import { RequireAuth } from "./components/layout/RequireAuth";
+import { RequireRole } from "./components/layout/RequireRole";
 import { AuthPage } from "./pages/AuthPage";
 import { ListingDetailPage } from "./pages/ListingDetailPage";
 import { ListingFormPage } from "./pages/ListingFormPage";
@@ -26,14 +27,29 @@ export default function App() {
       >
         <Route index element={<MarketplacePage />} />
         <Route path="listings/:id" element={<ListingDetailPage />} />
-        <Route path="my-listings" element={<MyListingsPage />} />
+        <Route
+          path="my-listings"
+          element={
+            <RequireRole allowedRoles={["farmer"]}>
+              <MyListingsPage />
+            </RequireRole>
+          }
+        />
         <Route
           path="my-listings/new"
-          element={<ListingFormPage mode="create" />}
+          element={
+            <RequireRole allowedRoles={["farmer"]}>
+              <ListingFormPage mode="create" />
+            </RequireRole>
+          }
         />
         <Route
           path="my-listings/:id/edit"
-          element={<ListingFormPage mode="edit" />}
+          element={
+            <RequireRole allowedRoles={["farmer"]}>
+              <ListingFormPage mode="edit" />
+            </RequireRole>
+          }
         />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders/:id" element={<OrderDetailPage />} />

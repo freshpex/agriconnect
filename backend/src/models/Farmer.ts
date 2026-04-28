@@ -6,6 +6,13 @@ export interface IFarmer extends Document {
   phone: string;
   password: string;
   role: "farmer" | "buyer";
+  accountTypeChangeRequest?: {
+    requestedRole: "farmer";
+    status: "pending" | "approved" | "rejected";
+    note?: string;
+    requestedAt: Date;
+    reviewedAt?: Date;
+  };
   kycVerified: boolean;
   kycData?: {
     nationalId: string;
@@ -42,6 +49,16 @@ const FarmerSchema = new Schema<IFarmer>(
     phone: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: ["farmer", "buyer"], default: "farmer" },
+    accountTypeChangeRequest: {
+      requestedRole: { type: String, enum: ["farmer"] },
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+      },
+      note: { type: String, trim: true, maxlength: 500 },
+      requestedAt: Date,
+      reviewedAt: Date,
+    },
     kycVerified: { type: Boolean, default: false },
     kycData: {
       nationalId: String,

@@ -5,7 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./state/AuthContext";
 import "./styles.css";
-import { registerSW } from "virtual:pwa-register";
+import { registerAppServiceWorker } from "./pwa";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
   },
 });
 
-registerSW({ immediate: true });
+registerAppServiceWorker();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

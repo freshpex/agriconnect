@@ -1,7 +1,11 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../../src/hooks/useAuth";
 
 export default function TabLayout() {
+  const { user } = useAuth();
+  const isFarmer = user?.role === "farmer";
+
   return (
     <Tabs
       screenOptions={{
@@ -42,6 +46,7 @@ export default function TabLayout() {
         name="my-listings"
         options={{
           title: "My Listings",
+          href: isFarmer ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="leaf-outline" size={size} color={color} />
           ),
