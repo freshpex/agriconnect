@@ -8,6 +8,7 @@ import {
   verifyPhoneNumber,
   verifyFarmLocation,
   getDeviceReachability,
+  requestFarmerAccess,
   updateProfile,
 } from "../controllers/farmer.controller";
 
@@ -17,6 +18,7 @@ const router = Router();
 router.use(authenticate);
 
 router.put("/profile", asyncHandler(updateProfile));
+router.post("/request-farmer-access", asyncHandler(requestFarmerAccess));
 router.post("/verify-kyc", validate(kycMatchRules), asyncHandler(verifyKyc));
 router.post("/verify-number", asyncHandler(verifyPhoneNumber));
 router.post(

@@ -37,3 +37,12 @@ export function useUpdateProfile() {
     },
   });
 }
+
+export function useRequestFarmerAccess() {
+  const { refreshUser } = useAuth();
+  return useMutation({
+    mutationFn: (data: { note?: string }) =>
+      farmerApi.requestFarmerAccess(data),
+    onSuccess: () => refreshUser(),
+  });
+}

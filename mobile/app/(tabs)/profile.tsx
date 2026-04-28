@@ -1,14 +1,20 @@
+import { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/hooks/useAuth";
-import { Badge } from "../../src/components/ui";
+import { useRequestFarmerAccess } from "../../src/hooks/useFarmer";
+import { Badge, Button, Input } from "../../src/components/ui";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const requestFarmerAccess = useRequestFarmerAccess();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [farmerAccessNote, setFarmerAccessNote] = useState("");
+  const farmerAccessRequest = user?.accountTypeChangeRequest;
+  const farmerAccessPending = farmerAccessRequest?.status === "pending";
 
   function handleLogout() {
     Alert.alert("Logout", "Are you sure you want to sign out?", [
@@ -22,6 +28,21 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  }
+
+  async function handleRequestFarmerAccess() {
+    try {
+      const response = await requestFarmerAccess.mutateAsync({
+        note: farmerAccessNote.trim() || undefined,
+      });
+      setFarmerAccessNote("");
+      Alert.alert("Request Sent", response.data.message);
+    } catch {
+      Alert.alert(
+        "Request Failed",
+        "Could not submit your farmer access request. Please try again."
+      );
+    }
   }
 
   return (
@@ -76,6 +97,64 @@ export default function ProfileScreen() {
           description="Checked automatically on login"
         />
       </View>
+
+      {user?.role === "buyer" ? (
+        <View className="mx-4 mt-4 bg-white rounded-2xl p-4 border border-gray-100">
+          <View className="flex-row items-start justify-between gap-3 mb-3">
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-gray-900">
+                Account Type Change
+              </Text>
+              <Text className="text-sm text-gray-500 mt-1 leading-5">
+                Buyer accounts can purchase produce only. Request farmer access
+                here if you need to create and manage produce listings.
+              </Text>
+            </View>
+            {farmerAccessRequest ? (
+              <Badge
+                label={farmerAccessRequest.status}
+                color={
+                  farmerAccessRequest.status === "rejected" ? "red" : "yellow"
+                }
+              />
+            ) : null}
+          </View>
+
+          {farmerAccessPending ? (
+            <View className="bg-amber-50 rounded-xl p-3">
+              <Text className="text-sm text-amber-800 leading-5">
+                Your farmer access request is pending review. Listing tools will
+                stay locked until your account type is changed to farmer.
+              </Text>
+            </View>
+          ) : (
+            <>
+              {farmerAccessRequest?.status === "rejected" ? (
+                <View className="bg-red-50 rounded-xl p-3 mb-3">
+                  <Text className="text-sm text-red-700 leading-5">
+                    Your last request was rejected. You can submit a new request
+                    with more detail.
+                  </Text>
+                </View>
+              ) : null}
+              <Input
+                label="Request note"
+                placeholder="Tell the team what crops or farm business you want to list."
+                value={farmerAccessNote}
+                onChangeText={setFarmerAccessNote}
+                multiline
+                numberOfLines={3}
+                maxLength={500}
+              />
+              <Button
+                title="Request farmer access"
+                onPress={handleRequestFarmerAccess}
+                loading={requestFarmerAccess.isPending}
+              />
+            </>
+          )}
+        </View>
+      ) : null}
 
       {/* Quick Actions */}
       <View className="mx-4 mt-4 bg-white rounded-2xl p-4 border border-gray-100">

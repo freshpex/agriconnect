@@ -1,8 +1,19 @@
+export type AccountTypeChangeStatus = "pending" | "approved" | "rejected";
+
+export interface AccountTypeChangeRequest {
+  requestedRole: "farmer";
+  status: AccountTypeChangeStatus;
+  note?: string;
+  requestedAt?: string;
+  reviewedAt?: string;
+}
+
 export interface User {
   id: string;
   name: string;
   phone: string;
   role: "farmer" | "buyer";
+  accountTypeChangeRequest?: AccountTypeChangeRequest;
   kycVerified: boolean;
   simSwapChecked: boolean;
   numberVerified: boolean;

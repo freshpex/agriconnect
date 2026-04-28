@@ -2,12 +2,16 @@ import { View, Text, FlatList, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMyListings, useDeleteListing } from "../../src/hooks/useListings";
+import { useAuth } from "../../src/hooks/useAuth";
+import { FarmerAccessRequired } from "../../src/components/FarmerAccessRequired";
 import { Loading, EmptyState, Badge } from "../../src/components/ui";
 import { formatCurrency, CROP_CATEGORIES } from "../../src/utils/helpers";
 import type { Listing } from "../../src/types";
 
 export default function MyListingsScreen() {
-  const { data: listings, isLoading } = useMyListings();
+  const { user } = useAuth();
+  const isFarmer = user?.role === "farmer";
+  const { data: listings, isLoading } = useMyListings(isFarmer);
   const deleteMutation = useDeleteListing();
   const router = useRouter();
 
@@ -22,6 +26,7 @@ export default function MyListingsScreen() {
     ]);
   }
 
+  if (!isFarmer) return <FarmerAccessRequired />;
   if (isLoading) return <Loading />;
 
   function renderItem({ item }: { item: Listing }) {

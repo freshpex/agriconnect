@@ -9,18 +9,19 @@ export function useListings(filters?: ListingFilters) {
   });
 }
 
-export function useListing(id: string) {
+export function useListing(id: string, enabled = true) {
   return useQuery({
     queryKey: ["listing", id],
     queryFn: () => listingsApi.getOne(id).then((r) => r.data.listing),
-    enabled: !!id,
+    enabled: enabled && !!id,
   });
 }
 
-export function useMyListings() {
+export function useMyListings(enabled = true) {
   return useQuery({
     queryKey: ["myListings"],
     queryFn: () => listingsApi.getMine().then((r) => r.data.listings),
+    enabled,
   });
 }
 

@@ -11,11 +11,14 @@ import {
 import { useRouter, Stack } from "expo-router";
 import * as Location from "expo-location";
 import { useCreateListing } from "../src/hooks/useListings";
+import { useAuth } from "../src/hooks/useAuth";
+import { FarmerAccessRequired } from "../src/components/FarmerAccessRequired";
 import { Button, Input } from "../src/components/ui";
 import { CROP_CATEGORIES, getErrorMessage } from "../src/utils/helpers";
 
 export default function CreateListingScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const createListing = useCreateListing();
 
   const [cropName, setCropName] = useState("");
@@ -58,6 +61,14 @@ export default function CreateListingScreen() {
   }
 
   async function handleSubmit() {
+    if (user?.role !== "farmer") {
+      Alert.alert(
+        "Farmer Access Required",
+        "Only farmer accounts can create listings. Request an account type change from your profile."
+      );
+      return;
+    }
+
     if (!cropName.trim() || !quantity || !pricePerUnit) {
       Alert.alert("Error", "Please fill in crop name, quantity, and price");
       return;
@@ -94,137 +105,143 @@ export default function CreateListingScreen() {
           headerBackTitle: "Back",
         }}
       />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-      >
-        <ScrollView
-          className="flex-1 bg-white px-5 pt-4"
-          keyboardShouldPersistTaps="handled"
+      {user?.role !== "farmer" ? (
+        <FarmerAccessRequired />
+      ) : (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1"
         >
-          <Input
-            label="Crop Name"
-            placeholder="e.g. Fresh Tomatoes"
-            value={cropName}
-            onChangeText={setCropName}
-          />
+          <ScrollView
+            className="flex-1 bg-white px-5 pt-4"
+            keyboardShouldPersistTaps="handled"
+          >
+            <Input
+              label="Crop Name"
+              placeholder="e.g. Fresh Tomatoes"
+              value={cropName}
+              onChangeText={setCropName}
+            />
 
-          {/* Category Picker */}
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Category
-          </Text>
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {CROP_CATEGORIES.map((cat) => (
-              <TouchableOpacity
-                key={cat.value}
-                onPress={() => setCategory(cat.value)}
-                className={`px-4 py-2 rounded-full ${
-                  category === cat.value ? "bg-primary-600" : "bg-gray-100"
-                }`}
-              >
-                <Text
-                  className={`text-sm ${
-                    category === cat.value
-                      ? "text-white font-medium"
-                      : "text-gray-700"
+            {/* Category Picker */}
+            <Text className="text-sm font-medium text-gray-700 mb-2">
+              Category
+            </Text>
+            <View className="flex-row flex-wrap gap-2 mb-4">
+              {CROP_CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat.value}
+                  onPress={() => setCategory(cat.value)}
+                  className={`px-4 py-2 rounded-full ${
+                    category === cat.value ? "bg-primary-600" : "bg-gray-100"
                   }`}
                 >
-                  {cat.emoji} {cat.label.replace(/^.+\s/, "")}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Input
-                label="Quantity"
-                placeholder="0"
-                value={quantity}
-                onChangeText={setQuantity}
-                keyboardType="numeric"
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">
-                Unit
-              </Text>
-              <View className="flex-row gap-2 mt-1">
-                {["kg", "bags", "crates", "tonnes"].map((u) => (
-                  <TouchableOpacity
-                    key={u}
-                    onPress={() => setUnit(u)}
-                    className={`px-3 py-2 rounded-lg ${
-                      unit === u ? "bg-primary-600" : "bg-gray-100"
+                  <Text
+                    className={`text-sm ${
+                      category === cat.value
+                        ? "text-white font-medium"
+                        : "text-gray-700"
                     }`}
                   >
-                    <Text
-                      className={`text-xs ${
-                        unit === u ? "text-white font-medium" : "text-gray-700"
+                    {cat.emoji} {cat.label.replace(/^.+\s/, "")}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View className="flex-row gap-3">
+              <View className="flex-1">
+                <Input
+                  label="Quantity"
+                  placeholder="0"
+                  value={quantity}
+                  onChangeText={setQuantity}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-sm font-medium text-gray-700 mb-1.5">
+                  Unit
+                </Text>
+                <View className="flex-row gap-2 mt-1">
+                  {["kg", "bags", "crates", "tonnes"].map((u) => (
+                    <TouchableOpacity
+                      key={u}
+                      onPress={() => setUnit(u)}
+                      className={`px-3 py-2 rounded-lg ${
+                        unit === u ? "bg-primary-600" : "bg-gray-100"
                       }`}
                     >
-                      {u}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        className={`text-xs ${
+                          unit === u
+                            ? "text-white font-medium"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {u}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             </View>
-          </View>
 
-          <Input
-            label="Price per Unit (NGN)"
-            placeholder="0.00"
-            value={pricePerUnit}
-            onChangeText={setPricePerUnit}
-            keyboardType="numeric"
-          />
-
-          <Input
-            label="Description (optional)"
-            placeholder="Describe your produce..."
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            numberOfLines={3}
-          />
-
-          <Input
-            label="Farm Address (optional)"
-            placeholder="e.g. Ogun State, Nigeria"
-            value={farmAddress}
-            onChangeText={setFarmAddress}
-          />
-
-          <Input
-            label="Harvest Date (optional)"
-            placeholder="YYYY-MM-DD"
-            value={harvestDate}
-            onChangeText={setHarvestDate}
-          />
-
-          {/* Location */}
-          <View className="mb-4">
-            <Button
-              title={
-                latitude
-                  ? `📍 Location Set (${latitude.toFixed(4)}, ${longitude?.toFixed(4)})`
-                  : "📍 Add My Location"
-              }
-              onPress={getCurrentLocation}
-              variant="outline"
-              loading={gettingLocation}
+            <Input
+              label="Price per Unit (NGN)"
+              placeholder="0.00"
+              value={pricePerUnit}
+              onChangeText={setPricePerUnit}
+              keyboardType="numeric"
             />
-          </View>
 
-          <View className="mb-8">
-            <Button
-              title="Create Listing"
-              onPress={handleSubmit}
-              loading={createListing.isPending}
+            <Input
+              label="Description (optional)"
+              placeholder="Describe your produce..."
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={3}
             />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+            <Input
+              label="Farm Address (optional)"
+              placeholder="e.g. Ogun State, Nigeria"
+              value={farmAddress}
+              onChangeText={setFarmAddress}
+            />
+
+            <Input
+              label="Harvest Date (optional)"
+              placeholder="YYYY-MM-DD"
+              value={harvestDate}
+              onChangeText={setHarvestDate}
+            />
+
+            {/* Location */}
+            <View className="mb-4">
+              <Button
+                title={
+                  latitude
+                    ? `📍 Location Set (${latitude.toFixed(4)}, ${longitude?.toFixed(4)})`
+                    : "📍 Add My Location"
+                }
+                onPress={getCurrentLocation}
+                variant="outline"
+                loading={gettingLocation}
+              />
+            </View>
+
+            <View className="mb-8">
+              <Button
+                title="Create Listing"
+                onPress={handleSubmit}
+                loading={createListing.isPending}
+              />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      )}
     </>
   );
 }

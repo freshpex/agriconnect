@@ -10,6 +10,10 @@ import {
   checkDeviceStatus,
 } from "../services/nac";
 
+function isNacMatch(value: string | boolean | undefined): boolean {
+  return value === true || value === "true";
+}
+
 /**
  * KYC Match — verify farmer identity against telco records.
  */
@@ -34,9 +38,9 @@ export const verifyKyc = async (
     birthdate: dateOfBirth,
   });
 
-  const nameMatched = result.nameMatch === "true";
-  const idMatched = result.idDocumentMatch === "true";
-  const dobMatched = result.birthdateMatch === "true";
+  const nameMatched = isNacMatch(result.nameMatch);
+  const idMatched = isNacMatch(result.idDocumentMatch);
+  const dobMatched = isNacMatch(result.birthdateMatch);
   const passed = nameMatched && idMatched;
 
   if (passed) {
@@ -160,13 +164,60 @@ export const getDeviceReachability = async (
   if (!farmer) throw new ApiError("User not found", 404);
 
   const result = await checkDeviceStatus(farmer.phone);
+  const reachabilityStatus =
+    result.reachabilityStatus || result.connectivityStatus || "NOT_CONNECTED";
 
   res.json({
     userId,
-    reachabilityStatus: result.reachabilityStatus,
+    reachabilityStatus,
     isOnline:
-      result.reachabilityStatus === "CONNECTED_DATA" ||
-      result.reachabilityStatus === "CONNECTED_SMS",
+      reachabilityStatus === "CONNECTED_DATA" ||
+      reachabilityStatus === "CONNECTED_SMS",
+  });
+};
+
+/**
+ * Request buyer-to-farmer account type review.
+ */
+export const requestFarmerAccess = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const farmer = await Farmer.findById(req.user!.id);
+  if (!farmer) throw new ApiError("User not found", 404);
+
+  if (farmer.role === "farmer") {
+    res.json({
+      message: "This account already has farmer access.",
+      user: farmer,
+    });
+    return;
+  }
+
+  if (farmer.accountTypeChangeRequest?.status === "pending") {
+    res.json({
+      message: "Your farmer access request is already pending review.",
+      user: farmer,
+    });
+    return;
+  }
+
+  const note =
+    typeof req.body.note === "string" ? req.body.note.trim().slice(0, 500) : "";
+
+  farmer.accountTypeChangeRequest = {
+    requestedRole: "farmer",
+    status: "pending",
+    note: note || undefined,
+    requestedAt: new Date(),
+  };
+
+  await farmer.save();
+
+  res.status(202).json({
+    message:
+      "Farmer access request submitted. The team will review your account type change.",
+    user: farmer,
   });
 };
 
