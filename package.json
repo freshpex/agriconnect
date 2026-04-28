@@ -4,6 +4,9 @@
   "private": true,
   "description": "AgriConnect Market — Digital marketplace for smallholder farmers in Sub-Saharan Africa",
   "scripts": {
+    "web": "cd web && npm run dev",
+    "build:web": "cd web && npm run build",
+    "preview:web": "cd web && npm run preview",
     "mobile": "cd mobile && npm start",
     "backend": "cd backend && npm run dev",
     "lint": "eslint \"mobile/**/*.{ts,tsx}\" \"backend/src/**/*.ts\"",

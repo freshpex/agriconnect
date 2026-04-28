@@ -52,7 +52,8 @@
         {
           "locationWhenInUsePermission": "AgriConnect needs your location to verify your farm and show nearby listings."
         }
-      ]
+      ],
+      "expo-font"
     ]
   }
 }

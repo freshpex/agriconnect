@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #10251a;
+  background: #faf8f1;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.app-field {
+  @apply w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-leaf-500 focus:ring-4 focus:ring-leaf-100 disabled:cursor-not-allowed disabled:bg-stone-100;
+}
+
+.app-label {
+  @apply mb-1.5 block text-sm font-semibold text-stone-700;
+}
+
+.app-panel {
+  @apply rounded-lg border border-stone-200 bg-white shadow-sm;
+}
+
+.glass-panel {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(250, 248, 241, 0.88)),
+    radial-gradient(circle at top left, rgba(254, 200, 75, 0.18), transparent 34%);
+}
+
+#google_translate_element,
+.goog-te-banner-frame,
+.goog-te-gadget,
+.goog-te-gadget-simple,
+body > .skiptranslate,
+iframe.skiptranslate {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+.goog-tooltip,
+.goog-tooltip:hover,
+.goog-text-highlight {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
