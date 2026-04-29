@@ -11,22 +11,27 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "agriconnect-market": "file:..",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.15.3",
+    "axios": "^1.7.9",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
-    "mongoose": "^8.13.2"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.13.2",
+    "typescript": "~5.9.2"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.2",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.15.3",
     "jest": "^29.7.0",
     "ts-jest": "^29.3.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "~5.9.2"
+    "ts-node-dev": "^2.0.0"
   }
 }

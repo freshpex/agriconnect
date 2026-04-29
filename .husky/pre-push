@@ -52,6 +52,87 @@ if ! echo "$CURRENT_BRANCH" | grep -qE "$BRANCH_REGEX"; then
   exit 1
 fi
 
+# --- Check package.json / package-lock.json sync ---
+echo "🔄 Checking package-lock.json sync..."
+
+for dir in . mobile backend; do
+  if [ -f "$dir/package.json" ] && [ -f "$dir/package-lock.json" ]; then
+    cd "$dir"
+    npm install --package-lock-only --ignore-scripts > /dev/null 2>&1
+    if ! git diff --quiet -- package-lock.json 2>/dev/null; then
+      echo ""
+      echo "🚫 PUSH REJECTED — package-lock.json out of sync in '$dir/'."
+      echo "   Run 'npm install' in '$dir/' and commit the updated lockfile."
+      echo ""
+      git checkout -- package-lock.json 2>/dev/null
+      exit 1
+    fi
+    cd - > /dev/null
+  fi
+done
+
+# --- Verify mobile app can resolve Metro config ---
+echo "📦 Checking mobile Metro config..."
+cd mobile
+node -e "
+  try {
+    require.resolve('nativewind/metro');
+    require.resolve('expo/metro-config');
+    console.log('Metro config dependencies OK');
+  } catch (e) {
+    console.error('Missing Metro dependency:', e.message);
+    process.exit(1);
+  }
+" 2>/dev/null
+METRO_EXIT=$?
+cd ..
+if [ $METRO_EXIT -ne 0 ]; then
+  echo ""
+  echo "🚫 PUSH REJECTED — Mobile Metro config has unresolved dependencies."
+  echo "   Run 'npm install' in mobile/ and ensure all native dependencies are present."
+  echo ""
+  exit 1
+fi
+
+# --- Run expo doctor ---
+echo "🩺 Running expo doctor..."
+cd mobile
+npx expo-doctor@latest 2>/dev/null
+DOCTOR_EXIT=$?
+cd ..
+if [ $DOCTOR_EXIT -ne 0 ]; then
+  echo ""
+  echo "⚠️  expo doctor found issues (see above). Consider fixing before pushing."
+  echo ""
+  # Warning only — don't block push for doctor issues
+fi
+
+# --- TypeScript check ---
+echo "🔎 Checking TypeScript..."
+cd mobile
+npx tsc --noEmit 2>/dev/null
+TS_MOBILE_EXIT=$?
+cd ..
+if [ $TS_MOBILE_EXIT -ne 0 ]; then
+  echo ""
+  echo "🚫 PUSH REJECTED — TypeScript errors in mobile/."
+  echo "   Run 'npx tsc --noEmit' in mobile/ to see errors."
+  echo ""
+  exit 1
+fi
+
+cd backend
+npx tsc --noEmit 2>/dev/null
+TS_BACKEND_EXIT=$?
+cd ..
+if [ $TS_BACKEND_EXIT -ne 0 ]; then
+  echo ""
+  echo "🚫 PUSH REJECTED — TypeScript errors in backend/."
+  echo "   Run 'npx tsc --noEmit' in backend/ to see errors."
+  echo ""
+  exit 1
+fi
+
 # --- Run lint ---
 echo "🔍 Running lint checks..."
 npx eslint "mobile/**/*.{ts,tsx}" "backend/src/**/*.ts" 2>/dev/null
