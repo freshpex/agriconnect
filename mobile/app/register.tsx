@@ -1,17 +1,10 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, Alert, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../src/hooks/useAuth";
 import { Button, Input, PhoneInput } from "../src/components/ui";
 import type { Country } from "../src/components/ui/PhoneInput";
+import { KeyboardAwareScrollView } from "../src/components/layout/KeyboardAwareScrollView";
 import { COUNTRIES, buildFullPhone } from "../src/utils/phone";
 import { getErrorMessage } from "../src/utils/helpers";
 
@@ -59,107 +52,105 @@ export default function RegisterScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-white"
+    <KeyboardAwareScrollView
+      className="bg-white"
+      contentContainerStyle={{ flexGrow: 1 }}
+      extraBottom={32}
+      extraTop={24}
+      includeTopInset
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 justify-center px-6 py-12">
-          {/* Header */}
-          <View className="items-center mb-8">
-            <Text className="text-5xl mb-3">🌱</Text>
-            <Text className="text-3xl font-bold text-primary-800">
-              Join AgriConnect
-            </Text>
-            <Text className="text-base text-gray-500 mt-1">
-              Create your account to start trading
-            </Text>
-          </View>
-
-          {/* Role Selector */}
-          <View className="flex-row mb-6 bg-gray-100 rounded-xl p-1">
-            <TouchableOpacity
-              onPress={() => setRole("farmer")}
-              className={`flex-1 py-3 rounded-lg items-center ${
-                role === "farmer" ? "bg-primary-600" : ""
-              }`}
-            >
-              <Text
-                className={`font-semibold ${
-                  role === "farmer" ? "text-white" : "text-gray-600"
-                }`}
-              >
-                🧑‍🌾 I'm a Farmer
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setRole("buyer")}
-              className={`flex-1 py-3 rounded-lg items-center ${
-                role === "buyer" ? "bg-primary-600" : ""
-              }`}
-            >
-              <Text
-                className={`font-semibold ${
-                  role === "buyer" ? "text-white" : "text-gray-600"
-                }`}
-              >
-                🛒 I'm a Buyer
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Form */}
-          <Input
-            label="Full Name"
-            placeholder="Enter your name"
-            value={name}
-            onChangeText={setName}
-            autoComplete="name"
-          />
-
-          <PhoneInput
-            label="Phone Number"
-            country={country}
-            onCountryChange={setCountry}
-            value={phone}
-            onChangeText={setPhone}
-          />
-
-          <Input
-            label="Password"
-            placeholder="At least 6 characters"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-
-          <Input
-            label="Confirm Password"
-            placeholder="Re-enter password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
-
-          <View className="mt-2">
-            <Button
-              title="Create Account"
-              onPress={handleRegister}
-              loading={loading}
-            />
-          </View>
-
-          <View className="flex-row justify-center mt-6">
-            <Text className="text-gray-500">Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text className="text-primary-600 font-semibold">Sign In</Text>
-            </TouchableOpacity>
-          </View>
+      <View className="flex-1 justify-center px-6">
+        {/* Header */}
+        <View className="items-center mb-8">
+          <Text className="text-5xl mb-3">🌱</Text>
+          <Text className="text-3xl font-bold text-primary-800">
+            Join AgriConnect
+          </Text>
+          <Text className="text-base text-gray-500 mt-1">
+            Create your account to start trading
+          </Text>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        {/* Role Selector */}
+        <View className="flex-row mb-6 bg-gray-100 rounded-xl p-1">
+          <TouchableOpacity
+            onPress={() => setRole("farmer")}
+            className={`flex-1 py-3 rounded-lg items-center ${
+              role === "farmer" ? "bg-primary-600" : ""
+            }`}
+          >
+            <Text
+              className={`font-semibold ${
+                role === "farmer" ? "text-white" : "text-gray-600"
+              }`}
+            >
+              🧑‍🌾 I'm a Farmer
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setRole("buyer")}
+            className={`flex-1 py-3 rounded-lg items-center ${
+              role === "buyer" ? "bg-primary-600" : ""
+            }`}
+          >
+            <Text
+              className={`font-semibold ${
+                role === "buyer" ? "text-white" : "text-gray-600"
+              }`}
+            >
+              🛒 I'm a Buyer
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Form */}
+        <Input
+          label="Full Name"
+          placeholder="Enter your name"
+          value={name}
+          onChangeText={setName}
+          autoComplete="name"
+        />
+
+        <PhoneInput
+          label="Phone Number"
+          country={country}
+          onCountryChange={setCountry}
+          value={phone}
+          onChangeText={setPhone}
+        />
+
+        <Input
+          label="Password"
+          placeholder="At least 6 characters"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        <Input
+          label="Confirm Password"
+          placeholder="Re-enter password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+        />
+
+        <View className="mt-2">
+          <Button
+            title="Create Account"
+            onPress={handleRegister}
+            loading={loading}
+          />
+        </View>
+
+        <View className="flex-row justify-center mt-6">
+          <Text className="text-gray-500">Already have an account? </Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text className="text-primary-600 font-semibold">Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAwareScrollView>
   );
 }

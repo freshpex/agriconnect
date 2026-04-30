@@ -83,6 +83,9 @@ export interface Listing {
   };
   farmAddress?: string;
   harvestDate?: string;
+  trustScore?: number;
+  trustDecision?: "approve" | "review" | "block";
+  reviewStatus?: "pending" | "approved" | "rejected";
   active: boolean;
   views: number;
   createdAt: string;
@@ -142,6 +145,29 @@ export interface ApiMessage {
   message: string;
 }
 
+export type ReportTargetType = "listing" | "order" | "user" | "other";
+export type ReportStatus = "open" | "reviewing" | "resolved" | "rejected";
+
+export interface Report {
+  _id: string;
+  reporter: FarmerSummary;
+  targetType: ReportTargetType;
+  targetId?: string;
+  reason: string;
+  description?: string;
+  status: ReportStatus;
+  resolutionNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportCreateInput {
+  targetType: ReportTargetType;
+  targetId?: string;
+  reason: string;
+  description?: string;
+}
+
 export interface KycMatchResult {
   kycVerified: boolean;
   matches?: {
@@ -163,6 +189,7 @@ export interface DeviceStatusResult {
   userId: string;
   reachabilityStatus: string;
   isOnline: boolean;
+  method?: "network" | "fallback";
 }
 
 export interface ListingFilters {

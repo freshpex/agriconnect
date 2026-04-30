@@ -46,7 +46,14 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView
+      className="flex-1 bg-gray-50"
+      contentContainerStyle={{
+        paddingBottom: Math.max(insets.bottom, 16) + 96,
+      }}
+      keyboardShouldPersistTaps="handled"
+      scrollIndicatorInsets={{ bottom: Math.max(insets.bottom, 16) + 96 }}
+    >
       {/* Profile Header */}
       <View
         className="bg-primary-600 pb-8 px-6 rounded-b-3xl"

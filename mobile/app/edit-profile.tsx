@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { View, ScrollView, Alert } from "react-native";
+import { View, Alert } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { useAuth } from "../src/hooks/useAuth";
 import { useUpdateProfile } from "../src/hooks/useFarmer";
+import { KeyboardAwareScrollView } from "../src/components/layout/KeyboardAwareScrollView";
 import { Button, Input } from "../src/components/ui";
 import { getErrorMessage } from "../src/utils/helpers";
 
@@ -42,9 +43,11 @@ export default function EditProfileScreen() {
           headerBackTitle: "Back",
         }}
       />
-      <ScrollView
-        className="flex-1 bg-white px-5 pt-6"
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAwareScrollView
+        className="bg-white"
+        contentContainerStyle={{ paddingHorizontal: 20 }}
+        extraBottom={32}
+        extraTop={24}
       >
         <Input
           label="Full Name"
@@ -67,7 +70,7 @@ export default function EditProfileScreen() {
             loading={updateProfile.isPending}
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </>
   );
 }

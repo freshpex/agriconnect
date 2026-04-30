@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Alert } from "react-native";
+import { View, Text, Alert } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import * as Location from "expo-location";
 import { useVerifyLocation } from "../src/hooks/useFarmer";
+import { KeyboardAwareScrollView } from "../src/components/layout/KeyboardAwareScrollView";
 import { Button } from "../src/components/ui";
 import { getErrorMessage } from "../src/utils/helpers";
 
@@ -60,7 +61,12 @@ export default function VerifyLocationScreen() {
           headerBackTitle: "Back",
         }}
       />
-      <ScrollView className="flex-1 bg-white px-5 pt-6">
+      <KeyboardAwareScrollView
+        className="bg-white"
+        contentContainerStyle={{ paddingHorizontal: 20 }}
+        extraBottom={32}
+        extraTop={24}
+      >
         <View className="items-center mb-8">
           <Text className="text-5xl mb-3">📍</Text>
           <Text className="text-xl font-bold text-gray-900">
@@ -93,7 +99,7 @@ export default function VerifyLocationScreen() {
         <Text className="text-xs text-gray-400 text-center mt-4">
           Make sure you are at your farm when verifying
         </Text>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </>
   );
 }

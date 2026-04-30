@@ -1,4 +1,8 @@
-import axios, { AxiosInstance, AxiosError } from "axios";
+import axios, {
+  AxiosInstance,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from "axios";
 import config from "../../config";
 
 export class NacApiError extends Error {
@@ -17,42 +21,86 @@ export class NacApiError extends Error {
 function wrapNacError(err: unknown): never {
   if (err instanceof AxiosError) {
     const status = err.response?.status || 502;
+    const data = err.response?.data;
+    // Log full response in dev so we can diagnose API issues
+    if (process.env.NODE_ENV !== "production") {
+      console.error(
+        `[NAC] Error status: ${status}, response:`,
+        JSON.stringify(data)
+      );
+    }
     const msg =
-      err.response?.data?.message ||
-      err.response?.data?.error ||
-      err.response?.data?.detail ||
+      data?.message ||
+      data?.error ||
+      data?.detail ||
+      data?.title ||
+      (typeof data === "string" ? data : null) ||
       "Nokia NaC API request failed";
     throw new NacApiError(msg, status);
   }
   throw err;
 }
 
-export interface NacServiceConfig {
-  baseUrl: string;
-  rapidApiHost: string;
+function shouldLog(): boolean {
+  return process.env.NODE_ENV !== "production";
 }
 
-export function createNacClient(service: NacServiceConfig): AxiosInstance {
-  if (!config.nac.apiKey) {
-    throw new NacApiError(
-      "Nokia Network as Code API key is not configured. Set NAC_APPLICATION_KEY, NAC_API_KEY, or NAC_RAPID_API_KEY.",
-      500
-    );
-  }
+function redactUrl(url?: string): string {
+  return url || "";
+}
 
+function getResponseSummary(data: unknown): Record<string, unknown> {
+  if (!data) return {};
+  if (Array.isArray(data)) return { type: "array", length: data.length };
+  if (typeof data === "object")
+    return { type: "object", keys: Object.keys(data) };
+  return { type: typeof data };
+}
+
+export function createNacClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: service.baseUrl,
+    baseURL: config.nac.baseUrl,
     headers: {
       "Content-Type": "application/json",
-      "X-RapidAPI-Key": config.nac.apiKey,
-      "X-RapidAPI-Host": service.rapidApiHost,
+      "x-rapidapi-key": config.nac.rapidApiKey,
+      "x-rapidapi-host": config.nac.host,
     },
     timeout: 15000,
   });
 
+  client.interceptors.request.use((request: InternalAxiosRequestConfig) => {
+    (
+      request as InternalAxiosRequestConfig & { metadata?: { start: number } }
+    ).metadata = { start: Date.now() };
+
+    if (shouldLog()) {
+      console.info(
+        `[NAC] -> ${request.method?.toUpperCase()} ${redactUrl(request.url)}`
+      );
+    }
+
+    return request;
+  });
+
   // Intercept errors to prevent leaking API keys and request details
   client.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      if (shouldLog()) {
+        const meta = (
+          response.config as InternalAxiosRequestConfig & {
+            metadata?: { start: number };
+          }
+        ).metadata;
+        const duration = meta ? Date.now() - meta.start : undefined;
+        console.info(
+          `[NAC] <- ${response.status} ${redactUrl(response.config.url)}${
+            duration !== undefined ? ` ${duration}ms` : ""
+          }`,
+          getResponseSummary(response.data)
+        );
+      }
+      return response;
+    },
     (error) => wrapNacError(error)
   );
 

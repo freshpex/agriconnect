@@ -1,10 +1,13 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/hooks/useAuth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const { user } = useAuth();
   const isFarmer = user?.role === "farmer";
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 8);
 
   return (
     <Tabs
@@ -14,9 +17,12 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: "#ffffff",
           borderTopColor: "#f3f4f6",
-          paddingBottom: 8,
           paddingTop: 8,
-          height: 65,
+          paddingBottom: bottomInset,
+          height: 60 + bottomInset,
+        },
+        tabBarItemStyle: {
+          paddingBottom: 2,
         },
         tabBarLabelStyle: {
           fontSize: 11,

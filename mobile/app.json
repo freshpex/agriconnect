@@ -25,7 +25,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#16a34a"
       },
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "package": "com.agriconnectmarket.mobile",
       "permissions": [

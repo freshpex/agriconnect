@@ -5,7 +5,7 @@ export interface IFarmer extends Document {
   name: string;
   phone: string;
   password: string;
-  role: "farmer" | "buyer";
+  role: "farmer" | "buyer" | "admin";
   accountTypeChangeRequest?: {
     requestedRole: "farmer";
     status: "pending" | "approved" | "rejected";
@@ -48,7 +48,11 @@ const FarmerSchema = new Schema<IFarmer>(
     name: { type: String, required: true, trim: true },
     phone: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true, minlength: 6, select: false },
-    role: { type: String, enum: ["farmer", "buyer"], default: "farmer" },
+    role: {
+      type: String,
+      enum: ["farmer", "buyer", "admin"],
+      default: "farmer",
+    },
     accountTypeChangeRequest: {
       requestedRole: { type: String, enum: ["farmer"] },
       status: {

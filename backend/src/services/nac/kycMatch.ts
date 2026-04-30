@@ -1,7 +1,7 @@
-import config from "../../config";
+import { randomUUID } from "crypto";
 import { createNacClient } from "./client";
 
-const client = createNacClient(config.nac.services.kycMatch);
+const client = createNacClient();
 
 export interface KycMatchRequest {
   phoneNumber: string;
@@ -13,19 +13,19 @@ export interface KycMatchRequest {
 }
 
 export interface KycMatchResult {
-  phoneNumberMatch?: string | boolean;
-  idDocumentMatch?: string | boolean;
-  nameMatch?: string | boolean;
-  givenNameMatch?: string | boolean;
-  familyNameMatch?: string | boolean;
-  birthdateMatch?: string | boolean;
+  phoneNumberMatch?: string;
+  idDocumentMatch?: string;
+  nameMatch?: string;
+  givenNameMatch?: string;
+  familyNameMatch?: string;
+  birthdateMatch?: string;
 }
 
-/**
- * Verify farmer identity by matching provided KYC data against
- * telco records. Returns match status for each field.
- */
 export async function matchKyc(data: KycMatchRequest): Promise<KycMatchResult> {
-  const response = await client.post("/match", data);
+  const response = await client.post(
+    "/passthrough/camara/v1/kyc-match/kyc-match/v0.3/match",
+    data,
+    { headers: { "x-correlator": randomUUID() } }
+  );
   return response.data;
 }

@@ -1,7 +1,8 @@
-import { View, Text, ScrollView, Alert } from "react-native";
+import { View, Text, Alert } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { useOrder, useUpdateOrderStatus } from "../../src/hooks/useOrders";
 import { useAuth } from "../../src/hooks/useAuth";
+import { KeyboardAwareScrollView } from "../../src/components/layout/KeyboardAwareScrollView";
 import { Loading, Button } from "../../src/components/ui";
 import {
   formatCurrency,
@@ -55,7 +56,12 @@ export default function OrderDetailScreen() {
           headerBackTitle: "Back",
         }}
       />
-      <ScrollView className="flex-1 bg-gray-50 px-4 pt-4">
+      <KeyboardAwareScrollView
+        className="bg-gray-50"
+        contentContainerStyle={{ paddingHorizontal: 16 }}
+        extraBottom={32}
+        extraTop={16}
+      >
         {/* Status */}
         <View className="bg-white rounded-2xl p-5 mb-4 items-center border border-gray-100">
           <View
@@ -156,7 +162,7 @@ export default function OrderDetailScreen() {
               />
             )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </>
   );
 }

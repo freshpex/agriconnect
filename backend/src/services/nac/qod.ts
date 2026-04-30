@@ -1,7 +1,6 @@
-import config from "../../config";
 import { createNacClient } from "./client";
 
-const client = createNacClient(config.nac.services.qod);
+const client = createNacClient();
 
 export interface QodSession {
   sessionId: string;
@@ -22,7 +21,7 @@ export async function createQodSession(
   durationSeconds = 300,
   qosProfile = "QOS_L"
 ): Promise<QodSession> {
-  const response = await client.post("/sessions", {
+  const response = await client.post("/qod/v1/sessions", {
     qosProfile,
     device: { phoneNumber },
     applicationServer: { ipv4Address: "0.0.0.0/0" },
@@ -35,7 +34,7 @@ export async function createQodSession(
  * Retrieve an existing QoD session status.
  */
 export async function getQodSession(sessionId: string): Promise<QodSession> {
-  const response = await client.get(`/sessions/${sessionId}`);
+  const response = await client.get(`/qod/v1/sessions/${sessionId}`);
   return response.data;
 }
 
@@ -43,5 +42,5 @@ export async function getQodSession(sessionId: string): Promise<QodSession> {
  * Delete / terminate a QoD session.
  */
 export async function deleteQodSession(sessionId: string): Promise<void> {
-  await client.delete(`/sessions/${sessionId}`);
+  await client.delete(`/qod/v1/sessions/${sessionId}`);
 }

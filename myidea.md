@@ -150,6 +150,46 @@ Connects farmers to nearby buyers with trust indicators (verified badges)
 Demonstrates connectivity-aware ordering and guaranteed transaction flows via QoD
 Functions effectively in low-connectivity rural environments
 
+------------------------------------------------
+DEMO SCRIPT — NOKIA NaC + TRUST SCORE ORCHESTRATOR
+------------------------------------------------
+
+Simulator numbers (from networkascode.nokia.io)
+- SIMULATOR_A: +99999991000<replaced with Nokia simulator number>
+- SIMULATOR_B: +99999991001<replaced with Nokia simulator number>
+
+Step 1 — Register farmer
+- Action: Register with SIMULATOR_A
+- Expected: 201 Created, sim-swap check logged as "passed" (audit trail)
+
+Step 2 — Run KYC Match
+- Action: Submit KYC details for SIMULATOR_A
+- Expected: kycVerified=true (or fallback noted), audit entry created
+
+Step 3 — Number verification
+- Action: Tap "Verify My Number" on mobile while using mobile data
+- Expected: numberVerified=true
+
+Step 4 — Location verification
+- Action: Verify farm location (GPS) from the farm
+- Expected: locationVerified=true, audit entry created
+
+Step 5 — Create listing (trust score orchestration)
+- Action: Create listing with coordinates + harvest date
+- Expected: trustScore >= 70, trustDecision=approve, listing active
+
+Step 6 — Buyer order + QoD
+- Action: Buyer places order on the listing
+- Expected: qodSessionId present on order details
+
+Step 7 — Device reachability
+- Action: On order detail page, check counterparty device status
+- Expected: reachabilityStatus returned
+
+Step 8 — Report issue workflow
+- Action: Buyer taps "Report issue" on listing or order
+- Expected: report created, admin can see it in /api/reports
+
 Post-Hackathon Plan
 After the hackathon, AgriConnect Market will be expanded by:
 

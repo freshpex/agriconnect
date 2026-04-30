@@ -37,7 +37,7 @@ function RootNavigator() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor="#ffffff" translucent={false} />
       <Stack
         screenOptions={{
           headerShown: false,

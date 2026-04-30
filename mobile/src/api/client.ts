@@ -1,13 +1,82 @@
 import axios from "axios";
 import Constants from "expo-constants";
+import { Platform } from "react-native";
 import { storage } from "../utils/storage";
 
-// Read API URL from app.json extra config, fallback to emulator default
-const API_URL =
-  Constants.expoConfig?.extra?.apiUrl ||
-  (__DEV__
-    ? "https://agriconnectbackend-qtx3.onrender.com/api" // Android emulator
-    : "https://agriconnectbackend-qtx3.onrender.com/api");
+const DEFAULT_API_URL = "https://agriconnectbackend-qtx3.onrender.com/api";
+
+type ExpoConfigWithHost = {
+  hostUri?: string;
+  extra?: {
+    apiUrl?: string;
+  };
+};
+
+type ExpoManifestWithHost = {
+  debuggerHost?: string;
+  hostUri?: string;
+};
+
+function getConfiguredApiUrl(): string | undefined {
+  return (
+    process.env.EXPO_PUBLIC_API_URL ||
+    (Constants.expoConfig as ExpoConfigWithHost | null)?.extra?.apiUrl
+  );
+}
+
+function getExpoHostUri(): string | undefined {
+  const constants = Constants as typeof Constants & {
+    manifest?: ExpoManifestWithHost | null;
+  };
+
+  return (
+    (Constants.expoConfig as ExpoConfigWithHost | null)?.hostUri ||
+    constants.manifest?.hostUri ||
+    constants.manifest?.debuggerHost
+  );
+}
+
+function getExpoHostApiUrl(localApiUrl: string): string | undefined {
+  const hostUri = getExpoHostUri();
+  const host = hostUri?.replace(/^[a-z]+:\/\//i, "").split(":")[0];
+
+  if (!host || host === "localhost" || host === "127.0.0.1") {
+    return undefined;
+  }
+
+  const match = localApiUrl.match(/^(https?):\/\/[^/:]+(:\d+)?(\/.*)?$/);
+  const protocol = match?.[1] ?? "http";
+  const port = match?.[2] ?? ":3000";
+  const path = match?.[3] ?? "/api";
+
+  return `${protocol}://${host}${port}${path}`;
+}
+
+function resolveApiUrl(configuredApiUrl?: string): string {
+  const apiUrl = configuredApiUrl || DEFAULT_API_URL;
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(
+    apiUrl
+  );
+
+  if (!isLocalhost) {
+    return apiUrl;
+  }
+
+  const expoHostUrl = getExpoHostApiUrl(apiUrl);
+  if (expoHostUrl) return expoHostUrl;
+
+  if (Platform.OS === "android") {
+    return apiUrl.replace(
+      /^(https?:\/\/)(localhost|127\.0\.0\.1)/,
+      (_match, protocol: string) => `${protocol}10.0.2.2`
+    );
+  }
+
+  return apiUrl;
+}
+
+// Read API URL from env/app config; Android cannot reach host localhost.
+const API_URL = resolveApiUrl(getConfiguredApiUrl());
 
 const api = axios.create({
   baseURL: API_URL,

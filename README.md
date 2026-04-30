@@ -63,6 +63,10 @@ agriconnect/
 5. **Device Status** — Connectivity-aware UX
 6. **QoD (Quality on Demand)** — Reliable transaction sessions
 
+## Demo Script
+
+See `myidea.md` for a step-by-step hackathon demo script (including simulator numbers and expected responses).
+
 ## Git Rules
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full details.

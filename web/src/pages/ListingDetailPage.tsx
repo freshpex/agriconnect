@@ -13,10 +13,13 @@ import {
 } from "lucide-react";
 import { useListing } from "../hooks/useListings";
 import { useCreateOrder } from "../hooks/useOrders";
+import { useCreateReport } from "../hooks/useReports";
 import { useAuth } from "../state/AuthContext";
+import { ListingMap } from "../components/maps/ListingMap";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Input, TextArea } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
 import { Alert } from "../components/ui/Alert";
 import { Spinner } from "../components/ui/Spinner";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -35,11 +38,15 @@ export function ListingDetailPage() {
   const { user, isAuthenticated } = useAuth();
   const { data: listing, isLoading, isError, error } = useListing(id);
   const createOrder = useCreateOrder();
+  const createReport = useCreateReport();
   const [quantity, setQuantity] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [message, setMessage] = useState("");
   const [orderOpen, setOrderOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("scam");
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportMessage, setReportMessage] = useState("");
 
   const farmer = listing ? getFarmer(listing) : null;
   const isOwnListing = useMemo(() => {
@@ -66,6 +73,10 @@ export function ListingDetailPage() {
     quantity && Number(quantity) > 0
       ? Number(quantity) * listing.pricePerUnit
       : 0;
+  const coordinates = listing.coordinates?.coordinates;
+  const hasCoordinates = Array.isArray(coordinates) && coordinates.length === 2;
+  const latitude = hasCoordinates ? coordinates![1] : undefined;
+  const longitude = hasCoordinates ? coordinates![0] : undefined;
 
   async function submitOrder(event: FormEvent) {
     event.preventDefault();
@@ -98,6 +109,34 @@ export function ListingDetailPage() {
       navigate("/orders");
     } catch (err) {
       setMessage(getApiError(err));
+    }
+  }
+
+  async function submitReport(event: FormEvent) {
+    event.preventDefault();
+    setReportMessage("");
+
+    if (!listing) {
+      setReportMessage("Listing details are missing.");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setReportMessage("Sign in to report issues.");
+      return;
+    }
+
+    try {
+      await createReport.mutateAsync({
+        targetType: "listing",
+        targetId: listing._id,
+        reason: reportReason,
+        description: reportDescription.trim() || undefined,
+      });
+      setReportMessage("Report submitted. Our admin team will review it.");
+      setReportDescription("");
+    } catch (err) {
+      setReportMessage(getApiError(err));
     }
   }
 
@@ -166,6 +205,13 @@ export function ListingDetailPage() {
               label="Harvest date"
               value={formatDate(listing.harvestDate)}
             />
+            {typeof listing.trustScore === "number" ? (
+              <InfoTile
+                icon={<ShieldCheck className="h-5 w-5" />}
+                label="Trust score"
+                value={`${listing.trustScore}/100 (${listing.trustDecision || "pending"})`}
+              />
+            ) : null}
             <InfoTile
               icon={<Eye className="h-5 w-5" />}
               label="Views"
@@ -177,6 +223,23 @@ export function ListingDetailPage() {
               value={listing.farmAddress || "Not provided"}
             />
           </div>
+
+          {hasCoordinates &&
+          latitude !== undefined &&
+          longitude !== undefined ? (
+            <div className="rounded-lg border border-stone-200 bg-white p-4">
+              <h2 className="text-sm font-black uppercase text-stone-400">
+                Farm location map
+              </h2>
+              <div className="mt-3">
+                <ListingMap
+                  latitude={latitude}
+                  longitude={longitude}
+                  label={listing.farmAddress || listing.cropName}
+                />
+              </div>
+            </div>
+          ) : null}
 
           <div className="rounded-lg border border-stone-200 bg-earth-50 p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -310,6 +373,49 @@ export function ListingDetailPage() {
             )}
           </div>
         )}
+
+        <div className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-black text-stone-950">Report issue</h2>
+          <p className="mt-2 text-sm text-stone-500">
+            Flag scams, wrong locations, or disputes for admin review.
+          </p>
+          {reportMessage ? (
+            <Alert
+              type={reportMessage.includes("submitted") ? "success" : "info"}
+              className="mt-4"
+            >
+              {reportMessage}
+            </Alert>
+          ) : null}
+          <form className="mt-4 space-y-3" onSubmit={submitReport}>
+            <Select
+              label="Reason"
+              value={reportReason}
+              onChange={(event) => setReportReason(event.target.value)}
+            >
+              <option value="scam">Possible scam/fraud</option>
+              <option value="location">Wrong or fake location</option>
+              <option value="quality">Quality/condition dispute</option>
+              <option value="other">Other</option>
+            </Select>
+            <TextArea
+              label="Details"
+              maxLength={1000}
+              value={reportDescription}
+              onChange={(event) => setReportDescription(event.target.value)}
+              placeholder="Share relevant details for review"
+            />
+            <Button
+              type="submit"
+              className="w-full"
+              variant="outline"
+              isLoading={createReport.isPending}
+              disabled={!isAuthenticated}
+            >
+              Submit report
+            </Button>
+          </form>
+        </div>
 
         <Link
           to="/"

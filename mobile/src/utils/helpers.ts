@@ -9,6 +9,37 @@ export const CROP_CATEGORIES = [
   { value: "other", label: "📦 Other", emoji: "📦" },
 ] as const;
 
+export const UNIT_OPTIONS = [
+  "kg",
+  "g",
+  "lb",
+  "oz",
+  "bags",
+  "sacks",
+  "crates",
+  "cartons",
+  "boxes",
+  "baskets",
+  "bunches",
+  "bundles",
+  "trays",
+  "pieces",
+  "dozens",
+  "cobs",
+  "pods",
+  "stems",
+  "tubers",
+  "heaps",
+  "mudu",
+  "paint buckets",
+  "jerrycans",
+  "bottles",
+  "litres",
+  "liters",
+  "tons",
+  "tonnes",
+] as const;
+
 export const ORDER_STATUS_LABELS: Record<
   string,
   { label: string; color: string }

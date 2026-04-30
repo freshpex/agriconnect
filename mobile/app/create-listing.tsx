@@ -1,18 +1,15 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Alert,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { View, Text, Alert, TouchableOpacity, Platform } from "react-native";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { useRouter, Stack } from "expo-router";
 import * as Location from "expo-location";
 import { useCreateListing } from "../src/hooks/useListings";
 import { useAuth } from "../src/hooks/useAuth";
 import { FarmerAccessRequired } from "../src/components/FarmerAccessRequired";
+import { UnitSelector } from "../src/components/listings/UnitSelector";
+import { KeyboardAwareScrollView } from "../src/components/layout/KeyboardAwareScrollView";
 import { Button, Input } from "../src/components/ui";
 import { CROP_CATEGORIES, getErrorMessage } from "../src/utils/helpers";
 
@@ -29,6 +26,8 @@ export default function CreateListingScreen() {
   const [description, setDescription] = useState("");
   const [farmAddress, setFarmAddress] = useState("");
   const [harvestDate, setHarvestDate] = useState("");
+  const [harvestDateValue, setHarvestDateValue] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
@@ -96,6 +95,14 @@ export default function CreateListingScreen() {
     }
   }
 
+  function handleDateChange(_event: DateTimePickerEvent, date?: Date) {
+    setShowDatePicker(false);
+    if (date) {
+      setHarvestDateValue(date);
+      setHarvestDate(date.toISOString().slice(0, 10));
+    }
+  }
+
   return (
     <>
       <Stack.Screen
@@ -108,139 +115,126 @@ export default function CreateListingScreen() {
       {user?.role !== "farmer" ? (
         <FarmerAccessRequired />
       ) : (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1"
+        <KeyboardAwareScrollView
+          className="bg-white"
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 20,
+          }}
+          extraBottom={32}
+          extraTop={16}
         >
-          <ScrollView
-            className="flex-1 bg-white px-5 pt-4"
-            keyboardShouldPersistTaps="handled"
-          >
-            <Input
-              label="Crop Name"
-              placeholder="e.g. Fresh Tomatoes"
-              value={cropName}
-              onChangeText={setCropName}
-            />
+          <Input
+            label="Crop Name"
+            placeholder="e.g. Fresh Tomatoes"
+            value={cropName}
+            onChangeText={setCropName}
+          />
 
-            {/* Category Picker */}
-            <Text className="text-sm font-medium text-gray-700 mb-2">
-              Category
-            </Text>
-            <View className="flex-row flex-wrap gap-2 mb-4">
-              {CROP_CATEGORIES.map((cat) => (
-                <TouchableOpacity
-                  key={cat.value}
-                  onPress={() => setCategory(cat.value)}
-                  className={`px-4 py-2 rounded-full ${
-                    category === cat.value ? "bg-primary-600" : "bg-gray-100"
+          {/* Category Picker */}
+          <Text className="text-sm font-medium text-gray-700 mb-2">
+            Category
+          </Text>
+          <View className="flex-row flex-wrap gap-2 mb-4">
+            {CROP_CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.value}
+                onPress={() => setCategory(cat.value)}
+                className={`px-4 py-2 rounded-full ${
+                  category === cat.value ? "bg-primary-600" : "bg-gray-100"
+                }`}
+              >
+                <Text
+                  className={`text-sm ${
+                    category === cat.value
+                      ? "text-white font-medium"
+                      : "text-gray-700"
                   }`}
                 >
-                  <Text
-                    className={`text-sm ${
-                      category === cat.value
-                        ? "text-white font-medium"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {cat.emoji} {cat.label.replace(/^.+\s/, "")}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <Input
-                  label="Quantity"
-                  placeholder="0"
-                  value={quantity}
-                  onChangeText={setQuantity}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">
-                  Unit
+                  {cat.emoji} {cat.label.replace(/^.+\s/, "")}
                 </Text>
-                <View className="flex-row gap-2 mt-1">
-                  {["kg", "bags", "crates", "tonnes"].map((u) => (
-                    <TouchableOpacity
-                      key={u}
-                      onPress={() => setUnit(u)}
-                      className={`px-3 py-2 rounded-lg ${
-                        unit === u ? "bg-primary-600" : "bg-gray-100"
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs ${
-                          unit === u
-                            ? "text-white font-medium"
-                            : "text-gray-700"
-                        }`}
-                      >
-                        {u}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </View>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-            <Input
-              label="Price per Unit (NGN)"
-              placeholder="0.00"
-              value={pricePerUnit}
-              onChangeText={setPricePerUnit}
-              keyboardType="numeric"
-            />
+          <Input
+            label="Quantity"
+            placeholder="0"
+            value={quantity}
+            onChangeText={setQuantity}
+            keyboardType="numeric"
+          />
 
-            <Input
-              label="Description (optional)"
-              placeholder="Describe your produce..."
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              numberOfLines={3}
-            />
+          <UnitSelector value={unit} onChange={setUnit} />
 
-            <Input
-              label="Farm Address (optional)"
-              placeholder="e.g. Ogun State, Nigeria"
-              value={farmAddress}
-              onChangeText={setFarmAddress}
-            />
+          <Input
+            label="Price per Unit (NGN)"
+            placeholder="0.00"
+            value={pricePerUnit}
+            onChangeText={setPricePerUnit}
+            keyboardType="numeric"
+          />
 
-            <Input
-              label="Harvest Date (optional)"
-              placeholder="YYYY-MM-DD"
-              value={harvestDate}
-              onChangeText={setHarvestDate}
-            />
+          <Input
+            label="Description (optional)"
+            placeholder="Describe your produce..."
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            numberOfLines={3}
+          />
 
-            {/* Location */}
-            <View className="mb-4">
-              <Button
-                title={
-                  latitude
-                    ? `📍 Location Set (${latitude.toFixed(4)}, ${longitude?.toFixed(4)})`
-                    : "📍 Add My Location"
-                }
-                onPress={getCurrentLocation}
-                variant="outline"
-                loading={gettingLocation}
+          <Input
+            label="Farm Address (optional)"
+            placeholder="e.g. Ogun State, Nigeria"
+            value={farmAddress}
+            onChangeText={setFarmAddress}
+          />
+
+          <View className="mb-4">
+            <Text className="text-sm font-medium text-gray-700 mb-1.5">
+              Harvest Date (optional)
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              className="border rounded-xl px-4 py-3.5 bg-white border-gray-300"
+            >
+              <Text className="text-base text-gray-900">
+                {harvestDate || "Select a date"}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker ? (
+              <DateTimePicker
+                value={harvestDateValue ?? new Date()}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleDateChange}
               />
-            </View>
+            ) : null}
+          </View>
 
-            <View className="mb-8">
-              <Button
-                title="Create Listing"
-                onPress={handleSubmit}
-                loading={createListing.isPending}
-              />
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          {/* Location */}
+          <View className="mb-4">
+            <Button
+              title={
+                latitude
+                  ? `📍 Location Set (${latitude.toFixed(4)}, ${longitude?.toFixed(4)})`
+                  : "📍 Add My Location"
+              }
+              onPress={getCurrentLocation}
+              variant="outline"
+              loading={gettingLocation}
+            />
+          </View>
+
+          <View>
+            <Button
+              title="Create Listing"
+              onPress={handleSubmit}
+              loading={createListing.isPending}
+            />
+          </View>
+        </KeyboardAwareScrollView>
       )}
     </>
   );

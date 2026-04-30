@@ -1,17 +1,10 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, Alert, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../src/hooks/useAuth";
 import { Button, Input, PhoneInput } from "../src/components/ui";
 import type { Country } from "../src/components/ui/PhoneInput";
+import { KeyboardAwareScrollView } from "../src/components/layout/KeyboardAwareScrollView";
 import { COUNTRIES, buildFullPhone } from "../src/utils/phone";
 import { getErrorMessage } from "../src/utils/helpers";
 
@@ -43,55 +36,53 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-white"
+    <KeyboardAwareScrollView
+      className="bg-white"
+      contentContainerStyle={{ flexGrow: 1 }}
+      extraBottom={32}
+      extraTop={24}
+      includeTopInset
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 justify-center px-6 py-12">
-          {/* Header */}
-          <View className="items-center mb-10">
-            <Text className="text-5xl mb-3">🌾</Text>
-            <Text className="text-3xl font-bold text-primary-800">
-              AgriConnect
-            </Text>
-            <Text className="text-base text-gray-500 mt-1">
-              Connecting farmers to buyers
-            </Text>
-          </View>
-
-          {/* Form */}
-          <View className="mb-6">
-            <PhoneInput
-              label="Phone Number"
-              country={country}
-              onCountryChange={setCountry}
-              value={phone}
-              onChangeText={setPhone}
-            />
-
-            <Input
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
-
-          <Button title="Sign In" onPress={handleLogin} loading={loading} />
-
-          <View className="flex-row justify-center mt-6">
-            <Text className="text-gray-500">Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/register")}>
-              <Text className="text-primary-600 font-semibold">Sign Up</Text>
-            </TouchableOpacity>
-          </View>
+      <View className="flex-1 justify-center px-6">
+        {/* Header */}
+        <View className="items-center mb-10">
+          <Text className="text-5xl mb-3">🌾</Text>
+          <Text className="text-3xl font-bold text-primary-800">
+            AgriConnect
+          </Text>
+          <Text className="text-base text-gray-500 mt-1">
+            Connecting farmers to buyers
+          </Text>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        {/* Form */}
+        <View className="mb-6">
+          <PhoneInput
+            label="Phone Number"
+            country={country}
+            onCountryChange={setCountry}
+            value={phone}
+            onChangeText={setPhone}
+          />
+
+          <Input
+            label="Password"
+            placeholder="Enter your password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+        </View>
+
+        <Button title="Sign In" onPress={handleLogin} loading={loading} />
+
+        <View className="flex-row justify-center mt-6">
+          <Text className="text-gray-500">Don't have an account? </Text>
+          <TouchableOpacity onPress={() => router.push("/register")}>
+            <Text className="text-primary-600 font-semibold">Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAwareScrollView>
   );
 }

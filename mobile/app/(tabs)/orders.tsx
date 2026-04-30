@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useMyOrders } from "../../src/hooks/useOrders";
 import { OrderCard } from "../../src/components/orders/OrderCard";
@@ -21,9 +27,8 @@ export default function OrdersScreen() {
       <View className="flex-row mx-4 mt-3 mb-2 bg-gray-100 rounded-xl p-1">
         <TouchableOpacity
           onPress={() => setViewAs("buyer")}
-          className={`flex-1 py-2.5 rounded-lg items-center ${
-            viewAs === "buyer" ? "bg-white shadow-sm" : ""
-          }`}
+          className="flex-1 py-2.5 rounded-lg items-center"
+          style={viewAs === "buyer" ? styles.activeTab : undefined}
         >
           <Text
             className={`font-semibold ${
@@ -35,9 +40,8 @@ export default function OrdersScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setViewAs("seller")}
-          className={`flex-1 py-2.5 rounded-lg items-center ${
-            viewAs === "seller" ? "bg-white shadow-sm" : ""
-          }`}
+          className="flex-1 py-2.5 rounded-lg items-center"
+          style={viewAs === "seller" ? styles.activeTab : undefined}
         >
           <Text
             className={`font-semibold ${
@@ -69,3 +73,14 @@ export default function OrdersScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  activeTab: {
+    backgroundColor: "#ffffff",
+    elevation: 1,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+  },
+});

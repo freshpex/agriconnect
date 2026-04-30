@@ -4,6 +4,8 @@ import authRoutes from "./auth";
 import farmerRoutes from "./farmer";
 import listingRoutes from "./listings";
 import orderRoutes from "./orders";
+import reportRoutes from "./reports";
+import auditRoutes from "./audits";
 
 const router = Router();
 
@@ -12,5 +14,7 @@ router.use("/auth", authRoutes);
 router.use("/farmers", farmerRoutes);
 router.use("/listings", listingRoutes);
 router.use("/orders", orderRoutes);
+router.use("/reports", reportRoutes);
+router.use("/audits", auditRoutes);
 
 export default router;

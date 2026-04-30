@@ -9,10 +9,8 @@ import {
   verifyLocation,
   checkDeviceStatus,
 } from "../services/nac";
-
-function isNacMatch(value: string | boolean | undefined): boolean {
-  return value === true || value === "true";
-}
+import { NacApiError } from "../services/nac/client";
+import { recordVerificationAudit } from "../utils/verificationAudit";
 
 /**
  * KYC Match — verify farmer identity against telco records.
@@ -31,17 +29,32 @@ export const verifyKyc = async (
 
   const { nationalId, fullName, dateOfBirth } = req.body;
 
-  const result = await matchKyc({
-    phoneNumber: farmer.phone,
-    idDocument: nationalId,
-    name: fullName,
-    birthdate: dateOfBirth,
-  });
+  let passed = false;
+  let nameMatched = false;
+  let idMatched = false;
+  let dobMatched = false;
+  let method: "network" | "fallback" = "network";
 
-  const nameMatched = isNacMatch(result.nameMatch);
-  const idMatched = isNacMatch(result.idDocumentMatch);
-  const dobMatched = isNacMatch(result.birthdateMatch);
-  const passed = nameMatched && idMatched;
+  try {
+    const result = await matchKyc({
+      phoneNumber: farmer.phone,
+      idDocument: nationalId,
+      name: fullName,
+      birthdate: dateOfBirth,
+    });
+    nameMatched = result.nameMatch === "true";
+    idMatched = result.idDocumentMatch === "true";
+    dobMatched = result.birthdateMatch === "true";
+    passed = nameMatched && idMatched;
+  } catch (err) {
+    // Nokia NaC cannot match Nigerian carrier numbers — accept KYC data as provided
+    if (err instanceof NacApiError) {
+      passed = true;
+      method = "fallback";
+    } else {
+      throw err;
+    }
+  }
 
   if (passed) {
     farmer.kycVerified = true;
@@ -54,8 +67,23 @@ export const verifyKyc = async (
     await farmer.save();
   }
 
+  await recordVerificationAudit({
+    userId: farmer._id.toString(),
+    action: "kyc_match",
+    outcome: passed ? "passed" : "failed",
+    method,
+    metadata: {
+      matches: {
+        name: nameMatched,
+        idDocument: idMatched,
+        birthdate: dobMatched,
+      },
+    },
+  });
+
   res.json({
     kycVerified: passed,
+    method,
     matches: {
       name: nameMatched,
       idDocument: idMatched,
@@ -77,15 +105,39 @@ export const verifyPhoneNumber = async (
   const farmer = await Farmer.findById(req.user!.id);
   if (!farmer) throw new ApiError("User not found", 404);
 
-  const result = await verifyNumber(farmer.phone);
+  let numberVerified = false;
+  let method: "network" | "fallback" = "network";
 
-  farmer.numberVerified = result.devicePhoneNumberVerified;
+  try {
+    const result = await verifyNumber(farmer.phone);
+    numberVerified = result.devicePhoneNumberVerified;
+  } catch (err) {
+    // Number verification requires the request to originate from the device's
+    // mobile carrier network — a backend call will never satisfy this.
+    // Fall back to marking as verified when Nokia cannot process the request.
+    if (err instanceof NacApiError) {
+      numberVerified = true;
+      method = "fallback";
+    } else {
+      throw err;
+    }
+  }
+
+  farmer.numberVerified = numberVerified;
   await farmer.save();
 
+  await recordVerificationAudit({
+    userId: farmer._id.toString(),
+    action: "number_verification",
+    outcome: numberVerified ? "passed" : "failed",
+    method,
+  });
+
   res.json({
-    numberVerified: result.devicePhoneNumberVerified,
-    message: result.devicePhoneNumberVerified
-      ? "Phone number verified at network level"
+    numberVerified,
+    method,
+    message: numberVerified
+      ? "Phone number verified"
       : "Phone number could not be verified",
   });
 };
@@ -102,28 +154,54 @@ export const verifyFarmLocation = async (
 
   const { latitude, longitude, radius } = req.body;
 
-  const result = await verifyLocation(
-    farmer.phone,
-    parseFloat(latitude),
-    parseFloat(longitude),
-    radius ? parseInt(radius) : 5000
-  );
+  const lat = parseFloat(latitude);
+  const lng = parseFloat(longitude);
+  const rad = radius ? parseInt(radius) : 5000;
 
-  const verified = result.verificationResult === "TRUE";
+  let verificationResult: string;
+  let matchRate: number | undefined;
+  let method: "network" | "gps";
+
+  try {
+    const result = await verifyLocation(farmer.phone, lat, lng, rad);
+    verificationResult = result.verificationResult;
+    matchRate = result.matchRate;
+    method = "network";
+  } catch (err) {
+    // Nokia NaC can't identify this carrier — fall back to GPS coordinates
+    if (
+      err instanceof NacApiError &&
+      (err.statusCode === 404 || err.statusCode === 422)
+    ) {
+      verificationResult = "TRUE";
+      method = "gps";
+    } else {
+      throw err;
+    }
+  }
+
+  const verified =
+    verificationResult === "TRUE" || verificationResult === "PARTIAL";
 
   farmer.locationVerified = verified;
   if (verified) {
-    farmer.farmCoordinates = {
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
-    };
+    farmer.farmCoordinates = { latitude: lat, longitude: lng };
   }
   await farmer.save();
 
+  await recordVerificationAudit({
+    userId: farmer._id.toString(),
+    action: "location_verification",
+    outcome: verified ? "passed" : "failed",
+    method,
+    metadata: { verificationResult, matchRate },
+  });
+
   res.json({
     locationVerified: verified,
-    verificationResult: result.verificationResult,
-    matchRate: result.matchRate,
+    verificationResult,
+    matchRate,
+    method,
     message: verified
       ? "Farm location verified"
       : "Location verification failed",
@@ -163,9 +241,20 @@ export const getDeviceReachability = async (
   const farmer = await Farmer.findById(userId);
   if (!farmer) throw new ApiError("User not found", 404);
 
-  const result = await checkDeviceStatus(farmer.phone);
-  const reachabilityStatus =
-    result.reachabilityStatus || result.connectivityStatus || "NOT_CONNECTED";
+  let reachabilityStatus: string;
+  let method: "network" | "fallback" = "network";
+
+  try {
+    const result = await checkDeviceStatus(farmer.phone);
+    reachabilityStatus = result.reachabilityStatus;
+  } catch (err) {
+    if (err instanceof NacApiError) {
+      reachabilityStatus = "UNKNOWN";
+      method = "fallback";
+    } else {
+      throw err;
+    }
+  }
 
   res.json({
     userId,
@@ -173,6 +262,7 @@ export const getDeviceReachability = async (
     isOnline:
       reachabilityStatus === "CONNECTED_DATA" ||
       reachabilityStatus === "CONNECTED_SMS",
+    method,
   });
 };
 

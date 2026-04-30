@@ -14,12 +14,14 @@
 html,
 body,
 #root {
+  height: 100%;
   min-height: 100%;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  min-height: 100dvh;
   overflow-x: hidden;
 }
 
@@ -44,8 +46,16 @@ select {
 
 .glass-panel {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(250, 248, 241, 0.88)),
-    radial-gradient(circle at top left, rgba(254, 200, 75, 0.18), transparent 34%);
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.94),
+      rgba(250, 248, 241, 0.88)
+    ),
+    radial-gradient(
+      circle at top left,
+      rgba(254, 200, 75, 0.18),
+      transparent 34%
+    );
 }
 
 #google_translate_element,

@@ -108,3 +108,34 @@ export const verifyLocationRules = [
     .isInt({ min: 100, max: 100000 })
     .withMessage("Radius must be between 100 and 100000 meters"),
 ];
+
+export const createReportRules = [
+  body("targetType")
+    .isIn(["listing", "order", "user", "other"])
+    .withMessage("Invalid report target type"),
+  body("targetId").optional().isMongoId().withMessage("Invalid target ID"),
+  body("reason")
+    .trim()
+    .notEmpty()
+    .withMessage("Reason is required")
+    .isLength({ max: 200 })
+    .withMessage("Reason must be 200 characters or less"),
+  body("description")
+    .optional()
+    .isString()
+    .isLength({ max: 1000 })
+    .withMessage("Description must be 1000 characters or less"),
+];
+
+export const updateReportRules = [
+  body("status")
+    .optional()
+    .isIn(["open", "reviewing", "resolved", "rejected"])
+    .withMessage("Invalid report status"),
+  body("resolutionNote")
+    .optional()
+    .isString()
+    .isLength({ max: 1000 })
+    .withMessage("Resolution note must be 1000 characters or less"),
+  body("assignedTo").optional().isMongoId().withMessage("Invalid assignee ID"),
+];

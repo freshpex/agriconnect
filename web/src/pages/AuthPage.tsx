@@ -86,8 +86,8 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
   }
 
   return (
-    <div className="min-h-screen bg-earth-50 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl overflow-hidden rounded-lg border border-stone-200 bg-white shadow-soft lg:grid-cols-[1fr_0.9fr]">
+    <div className="min-h-[100dvh] bg-earth-50 px-4 pb-[calc(1.5rem_+_env(safe-area-inset-bottom))] pt-[calc(1.5rem_+_env(safe-area-inset-top))] sm:px-6 lg:px-8">
+      <div className="mx-auto grid min-h-[calc(100dvh_-_3rem_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] max-w-6xl overflow-hidden rounded-lg border border-stone-200 bg-white shadow-soft lg:grid-cols-[1fr_0.9fr]">
         <section className="relative flex flex-col justify-between overflow-hidden bg-leaf-900 p-6 text-white sm:p-10">
           <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(120deg,#ffffff_1px,transparent_1px),linear-gradient(60deg,#ffffff_1px,transparent_1px)] [background-size:52px_52px]" />
           <div className="relative z-10">

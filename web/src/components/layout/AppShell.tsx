@@ -89,7 +89,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-earth-50 text-stone-950">
+    <div className="min-h-[100dvh] bg-earth-50 pt-[env(safe-area-inset-top)] text-stone-950">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-stone-200 bg-white/90 p-5 backdrop-blur lg:block">
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3">
@@ -194,14 +194,14 @@ export function AppShell() {
         </div>
       ) : null}
 
-      <main className="mx-auto max-w-7xl px-4 py-6 pb-24 sm:px-6 lg:ml-72 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] sm:px-6 lg:ml-72 lg:px-8">
         <Outlet />
       </main>
 
       <MobileAppPrompt />
       <PwaUpdatePrompt />
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 px-2 py-2 shadow-soft backdrop-blur lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 px-2 pb-[calc(0.5rem_+_env(safe-area-inset-bottom))] pt-2 shadow-soft backdrop-blur lg:hidden">
         <div
           className={clsx(
             "grid gap-1",
