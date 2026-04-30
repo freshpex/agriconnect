@@ -17,6 +17,12 @@ export interface IListing extends Document {
   };
   farmAddress?: string;
   harvestDate?: Date;
+  trustScore?: number;
+  trustDecision?: "approve" | "review" | "block";
+  reviewStatus?: "pending" | "approved" | "rejected";
+  reviewedBy?: mongoose.Types.ObjectId;
+  reviewedAt?: Date;
+  reviewNote?: string;
   active: boolean;
   views: number;
   createdAt: Date;
@@ -56,6 +62,18 @@ const ListingSchema = new Schema<IListing>(
     },
     farmAddress: String,
     harvestDate: Date,
+    trustScore: { type: Number, min: 0, max: 100 },
+    trustDecision: {
+      type: String,
+      enum: ["approve", "review", "block"],
+    },
+    reviewStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+    },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: "Farmer" },
+    reviewedAt: Date,
+    reviewNote: { type: String, maxlength: 500 },
     active: { type: Boolean, default: true },
     views: { type: Number, default: 0 },
   },

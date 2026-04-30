@@ -3,9 +3,11 @@ import mongoose from "mongoose";
 import app from "./app";
 import config from "./config";
 import { connectDatabase } from "./database/connection";
+import { ensureAdminUser } from "./utils/adminBootstrap";
 
 async function main() {
   await connectDatabase();
+  await ensureAdminUser();
 
   const server = http.createServer(app);
 

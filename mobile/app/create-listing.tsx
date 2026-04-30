@@ -8,11 +8,16 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { useRouter, Stack } from "expo-router";
 import * as Location from "expo-location";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCreateListing } from "../src/hooks/useListings";
 import { useAuth } from "../src/hooks/useAuth";
 import { FarmerAccessRequired } from "../src/components/FarmerAccessRequired";
+import { UnitSelector } from "../src/components/listings/UnitSelector";
 import { Button, Input } from "../src/components/ui";
 import { CROP_CATEGORIES, getErrorMessage } from "../src/utils/helpers";
 
@@ -20,6 +25,8 @@ export default function CreateListingScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const createListing = useCreateListing();
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 24) + 24;
 
   const [cropName, setCropName] = useState("");
   const [category, setCategory] = useState("other");
@@ -29,6 +36,8 @@ export default function CreateListingScreen() {
   const [description, setDescription] = useState("");
   const [farmAddress, setFarmAddress] = useState("");
   const [harvestDate, setHarvestDate] = useState("");
+  const [harvestDateValue, setHarvestDateValue] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
@@ -96,6 +105,14 @@ export default function CreateListingScreen() {
     }
   }
 
+  function handleDateChange(_event: DateTimePickerEvent, date?: Date) {
+    setShowDatePicker(false);
+    if (date) {
+      setHarvestDateValue(date);
+      setHarvestDate(date.toISOString().slice(0, 10));
+    }
+  }
+
   return (
     <>
       <Stack.Screen
@@ -110,11 +127,18 @@ export default function CreateListingScreen() {
       ) : (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1"
+          className="flex-1 bg-white"
         >
           <ScrollView
-            className="flex-1 bg-white px-5 pt-4"
+            className="flex-1 bg-white"
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 20,
+              paddingTop: 16,
+              paddingBottom: bottomPadding,
+            }}
             keyboardShouldPersistTaps="handled"
+            scrollIndicatorInsets={{ bottom: insets.bottom }}
           >
             <Input
               label="Crop Name"
@@ -149,43 +173,15 @@ export default function CreateListingScreen() {
               ))}
             </View>
 
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <Input
-                  label="Quantity"
-                  placeholder="0"
-                  value={quantity}
-                  onChangeText={setQuantity}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">
-                  Unit
-                </Text>
-                <View className="flex-row gap-2 mt-1">
-                  {["kg", "bags", "crates", "tonnes"].map((u) => (
-                    <TouchableOpacity
-                      key={u}
-                      onPress={() => setUnit(u)}
-                      className={`px-3 py-2 rounded-lg ${
-                        unit === u ? "bg-primary-600" : "bg-gray-100"
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs ${
-                          unit === u
-                            ? "text-white font-medium"
-                            : "text-gray-700"
-                        }`}
-                      >
-                        {u}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </View>
+            <Input
+              label="Quantity"
+              placeholder="0"
+              value={quantity}
+              onChangeText={setQuantity}
+              keyboardType="numeric"
+            />
+
+            <UnitSelector value={unit} onChange={setUnit} />
 
             <Input
               label="Price per Unit (NGN)"
@@ -211,12 +207,27 @@ export default function CreateListingScreen() {
               onChangeText={setFarmAddress}
             />
 
-            <Input
-              label="Harvest Date (optional)"
-              placeholder="YYYY-MM-DD"
-              value={harvestDate}
-              onChangeText={setHarvestDate}
-            />
+            <View className="mb-4">
+              <Text className="text-sm font-medium text-gray-700 mb-1.5">
+                Harvest Date (optional)
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                className="border rounded-xl px-4 py-3.5 bg-white border-gray-300"
+              >
+                <Text className="text-base text-gray-900">
+                  {harvestDate || "Select a date"}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker ? (
+                <DateTimePicker
+                  value={harvestDateValue ?? new Date()}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleDateChange}
+                />
+              ) : null}
+            </View>
 
             {/* Location */}
             <View className="mb-4">
@@ -232,7 +243,7 @@ export default function CreateListingScreen() {
               />
             </View>
 
-            <View className="mb-8">
+            <View>
               <Button
                 title="Create Listing"
                 onPress={handleSubmit}

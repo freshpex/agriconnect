@@ -9,9 +9,11 @@ import {
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useListing, useUpdateListing } from "../../src/hooks/useListings";
 import { useAuth } from "../../src/hooks/useAuth";
 import { FarmerAccessRequired } from "../../src/components/FarmerAccessRequired";
+import { UnitSelector } from "../../src/components/listings/UnitSelector";
 import { Button, Input, Loading } from "../../src/components/ui";
 import { CROP_CATEGORIES, getErrorMessage } from "../../src/utils/helpers";
 
@@ -22,6 +24,8 @@ export default function EditListingScreen() {
   const { data: listing, isLoading } = useListing(id, isFarmer);
   const updateListing = useUpdateListing();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 24) + 24;
 
   const [cropName, setCropName] = useState("");
   const [category, setCategory] = useState("other");
@@ -94,11 +98,18 @@ export default function EditListingScreen() {
       ) : (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1"
+          className="flex-1 bg-white"
         >
           <ScrollView
-            className="flex-1 bg-white px-5 pt-4"
+            className="flex-1 bg-white"
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 20,
+              paddingTop: 16,
+              paddingBottom: bottomPadding,
+            }}
             keyboardShouldPersistTaps="handled"
+            scrollIndicatorInsets={{ bottom: insets.bottom }}
           >
             <Input
               label="Crop Name"
@@ -129,19 +140,14 @@ export default function EditListingScreen() {
               ))}
             </View>
 
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <Input
-                  label="Quantity"
-                  value={quantity}
-                  onChangeText={setQuantity}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View className="flex-1">
-                <Input label="Unit" value={unit} onChangeText={setUnit} />
-              </View>
-            </View>
+            <Input
+              label="Quantity"
+              value={quantity}
+              onChangeText={setQuantity}
+              keyboardType="numeric"
+            />
+
+            <UnitSelector value={unit} onChange={setUnit} />
 
             <Input
               label="Price per Unit (NGN)"
@@ -177,7 +183,7 @@ export default function EditListingScreen() {
               </View>
             </TouchableOpacity>
 
-            <View className="mb-8">
+            <View>
               <Button
                 title="Save Changes"
                 onPress={handleSave}

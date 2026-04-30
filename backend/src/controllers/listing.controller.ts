@@ -4,6 +4,8 @@ import { ApiError } from "../middleware/errorHandler";
 import { Listing } from "../models/Listing";
 import { Farmer } from "../models/Farmer";
 import { checkSimSwap } from "../services/nac";
+import { evaluateTrustScore } from "../services/nac/trustScore";
+import { recordVerificationAudit } from "../utils/verificationAudit";
 
 /**
  * Create a new produce listing.
@@ -24,17 +26,39 @@ export const createListing = async (
   try {
     const simResult = await checkSimSwap(farmer.phone, 24);
     if (simResult.swapped) {
+      await recordVerificationAudit({
+        userId: farmer._id.toString(),
+        action: "sim_swap_check",
+        outcome: "failed",
+        method: "network",
+        metadata: { swapped: true, windowHours: 24 },
+      });
       throw new ApiError(
         "Listing creation blocked: SIM swap detected. Verify your identity.",
         403
       );
     }
+
+    await recordVerificationAudit({
+      userId: farmer._id.toString(),
+      action: "sim_swap_check",
+      outcome: "passed",
+      method: "network",
+      metadata: { swapped: false, windowHours: 24 },
+    });
   } catch (err) {
     if (err instanceof ApiError) throw err;
     console.warn(
       "SIM Swap check unavailable during listing creation:",
       farmer.phone
     );
+    await recordVerificationAudit({
+      userId: farmer._id.toString(),
+      action: "sim_swap_check",
+      outcome: "unavailable",
+      method: "network",
+      metadata: { windowHours: 24 },
+    });
   }
 
   const {
@@ -52,6 +76,54 @@ export const createListing = async (
     harvestDate,
   } = req.body;
 
+  const lat = latitude ? parseFloat(latitude) : undefined;
+  const lng = longitude ? parseFloat(longitude) : undefined;
+  const radiusMeters = 5000;
+
+  const trustResult = await evaluateTrustScore({
+    phoneNumber: farmer.phone,
+    kycData: farmer.kycData
+      ? {
+          nationalId: farmer.kycData.nationalId,
+          fullName: farmer.kycData.fullName,
+          dateOfBirth: farmer.kycData.dateOfBirth,
+        }
+      : undefined,
+    location:
+      lat !== undefined && lng !== undefined
+        ? { latitude: lat, longitude: lng, radius: radiusMeters }
+        : farmer.farmCoordinates
+          ? {
+              latitude: farmer.farmCoordinates.latitude,
+              longitude: farmer.farmCoordinates.longitude,
+              radius: radiusMeters,
+            }
+          : undefined,
+    numberVerified: farmer.numberVerified,
+  });
+
+  await recordVerificationAudit({
+    userId: farmer._id.toString(),
+    action: "trust_score",
+    outcome:
+      trustResult.decision === "approve"
+        ? "passed"
+        : trustResult.decision === "review"
+          ? "pending"
+          : "blocked",
+    method: "orchestrator",
+    score: trustResult.score,
+    decision: trustResult.decision,
+    metadata: { signals: trustResult.signals },
+  });
+
+  if (trustResult.decision === "block") {
+    throw new ApiError(
+      "Listing creation blocked: trust score too low. Request a manual review.",
+      403
+    );
+  }
+
   const listingData: Record<string, unknown> = {
     farmer: req.user!.id,
     cropName,
@@ -65,12 +137,16 @@ export const createListing = async (
     farmAddress,
     harvestDate,
     locationVerified: farmer.locationVerified || false,
+    trustScore: trustResult.score,
+    trustDecision: trustResult.decision,
+    reviewStatus: trustResult.decision === "review" ? "pending" : "approved",
+    active: trustResult.decision === "review" ? false : true,
   };
 
-  if (latitude && longitude) {
+  if (lat !== undefined && lng !== undefined) {
     listingData.coordinates = {
       type: "Point",
-      coordinates: [parseFloat(longitude), parseFloat(latitude)],
+      coordinates: [lng, lat],
     };
   }
 

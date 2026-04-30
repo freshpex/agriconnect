@@ -1,7 +1,6 @@
-import config from "../../config";
 import { createNacClient } from "./client";
 
-const client = createNacClient(config.nac.services.simSwap);
+const client = createNacClient();
 
 export interface SimSwapCheckResult {
   swapped: boolean;
@@ -19,7 +18,7 @@ export async function checkSimSwap(
   phoneNumber: string,
   maxAgeHours = 72
 ): Promise<SimSwapCheckResult> {
-  const response = await client.post("/check", {
+  const response = await client.post("/sim-swap/v1/check", {
     phoneNumber,
     maxAge: maxAgeHours,
   });
@@ -32,7 +31,7 @@ export async function checkSimSwap(
 export async function retrieveSimSwapDate(
   phoneNumber: string
 ): Promise<SimSwapDateResult> {
-  const response = await client.post("/retrieve-date", {
+  const response = await client.post("/sim-swap/v1/retrieve-date", {
     phoneNumber,
   });
   return response.data;

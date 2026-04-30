@@ -1,9 +1,50 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Alert } from "react-native";
+import { View, Text, ScrollView, Alert, Platform } from "react-native";
 import { useRouter, Stack } from "expo-router";
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { useVerifyKyc } from "../src/hooks/useFarmer";
 import { Button, Input } from "../src/components/ui";
 import { getErrorMessage } from "../src/utils/helpers";
+
+const DATE_INPUT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+function formatDateToString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeDateInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 4) {
+    return digits;
+  }
+  if (digits.length <= 6) {
+    return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  }
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
+}
+
+function parseDateString(value: string): Date | null {
+  if (!DATE_INPUT_REGEX.test(value)) {
+    return null;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const parsedDate = new Date(year, month - 1, day);
+  if (
+    parsedDate.getFullYear() !== year ||
+    parsedDate.getMonth() !== month - 1 ||
+    parsedDate.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return parsedDate;
+}
 
 export default function VerifyKycScreen() {
   const router = useRouter();
@@ -12,10 +53,42 @@ export default function VerifyKycScreen() {
   const [nationalId, setNationalId] = useState("");
   const [fullName, setFullName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [pickerDate, setPickerDate] = useState<Date>(() => new Date());
+
+  function handleOpenDatePicker() {
+    const parsedDate = parseDateString(dateOfBirth.trim());
+    setPickerDate(parsedDate ?? new Date());
+    setShowDatePicker(true);
+  }
+
+  function handleDateChange(event: DateTimePickerEvent, selectedDate?: Date) {
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+
+    if (event.type === "dismissed") {
+      return;
+    }
+
+    if (selectedDate) {
+      setPickerDate(selectedDate);
+      setDateOfBirth(formatDateToString(selectedDate));
+    }
+  }
 
   async function handleVerify() {
-    if (!nationalId.trim() || !fullName.trim() || !dateOfBirth.trim()) {
+    const trimmedDate = dateOfBirth.trim();
+    if (!nationalId.trim() || !fullName.trim() || !trimmedDate) {
       Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (!parseDateString(trimmedDate)) {
+      Alert.alert(
+        "Invalid Date",
+        "Please enter a valid date (YYYY-MM-DD) or pick one from the calendar."
+      );
       return;
     }
 
@@ -23,7 +96,7 @@ export default function VerifyKycScreen() {
       const result = await verifyKyc.mutateAsync({
         nationalId: nationalId.trim(),
         fullName: fullName.trim(),
-        dateOfBirth: dateOfBirth.trim(),
+        dateOfBirth: trimmedDate,
       });
 
       if (result.data.kycVerified) {
@@ -83,8 +156,42 @@ export default function VerifyKycScreen() {
           label="Date of Birth"
           placeholder="YYYY-MM-DD"
           value={dateOfBirth}
-          onChangeText={setDateOfBirth}
+          onChangeText={(value) => setDateOfBirth(normalizeDateInput(value))}
+          keyboardType="number-pad"
+          inputMode="numeric"
+          maxLength={10}
         />
+
+        <View className="mb-4">
+          <Button
+            title="Pick date"
+            variant="outline"
+            fullWidth={false}
+            onPress={handleOpenDatePicker}
+          />
+        </View>
+
+        {showDatePicker ? (
+          <View className="mb-4">
+            <DateTimePicker
+              value={pickerDate}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              maximumDate={new Date()}
+              onChange={handleDateChange}
+            />
+            {Platform.OS === "ios" ? (
+              <View className="mt-3">
+                <Button
+                  title="Done"
+                  variant="outline"
+                  fullWidth={false}
+                  onPress={() => setShowDatePicker(false)}
+                />
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         <View className="mt-4 mb-8">
           <Button

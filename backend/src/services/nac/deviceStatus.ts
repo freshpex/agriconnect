@@ -1,7 +1,6 @@
-import config from "../../config";
 import { createNacClient } from "./client";
 
-const client = createNacClient(config.nac.services.deviceStatus);
+const client = createNacClient();
 
 export type ConnectivityStatus =
   | "CONNECTED_SMS"
@@ -11,8 +10,7 @@ export type ConnectivityStatus =
   | "REACHABLE_DATA";
 
 export interface DeviceStatusResult {
-  reachabilityStatus?: ConnectivityStatus;
-  connectivityStatus?: ConnectivityStatus;
+  reachabilityStatus: ConnectivityStatus;
   lastStatusTime?: string;
 }
 
@@ -23,8 +21,11 @@ export interface DeviceStatusResult {
 export async function checkDeviceStatus(
   phoneNumber: string
 ): Promise<DeviceStatusResult> {
-  const response = await client.post("/connectivity", {
-    device: { phoneNumber },
-  });
+  const response = await client.post(
+    "/device-reachability-status/v1/retrieve",
+    {
+      device: { phoneNumber },
+    }
+  );
   return response.data;
 }

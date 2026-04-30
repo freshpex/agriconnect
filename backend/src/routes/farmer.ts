@@ -8,8 +8,8 @@ import {
   verifyPhoneNumber,
   verifyFarmLocation,
   getDeviceReachability,
-  requestFarmerAccess,
   updateProfile,
+  requestFarmerAccess,
 } from "../controllers/farmer.controller";
 
 const router = Router();

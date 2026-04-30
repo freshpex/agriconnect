@@ -1,13 +1,48 @@
 import axios from "axios";
 import Constants from "expo-constants";
+import { Platform } from "react-native";
 import { storage } from "../utils/storage";
 
-// Read API URL from app.json extra config, fallback to emulator default
-const API_URL =
-  Constants.expoConfig?.extra?.apiUrl ||
-  (__DEV__
-    ? "https://agriconnectbackend-qtx3.onrender.com/api" // Android emulator
-    : "https://agriconnectbackend-qtx3.onrender.com/api");
+const DEFAULT_API_URL = "https://agriconnectbackend-qtx3.onrender.com/api";
+
+function getExpoHostApiUrl(localApiUrl: string): string | undefined {
+  const hostUri = (Constants.expoConfig as { hostUri?: string } | null)
+    ?.hostUri;
+  const host = hostUri?.replace(/^[a-z]+:\/\//i, "").split(":")[0];
+
+  if (!host || host === "localhost" || host === "127.0.0.1") {
+    return undefined;
+  }
+
+  const match = localApiUrl.match(/^(https?):\/\/[^/:]+(:\d+)?(\/.*)?$/);
+  const protocol = match?.[1] ?? "http";
+  const port = match?.[2] ?? ":3000";
+  const path = match?.[3] ?? "/api";
+
+  return `${protocol}://${host}${port}${path}`;
+}
+
+function resolveApiUrl(configuredApiUrl?: string): string {
+  const apiUrl = configuredApiUrl || DEFAULT_API_URL;
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(
+    apiUrl
+  );
+
+  if (Platform.OS !== "android" || !isLocalhost) {
+    return apiUrl;
+  }
+
+  return (
+    getExpoHostApiUrl(apiUrl) ??
+    apiUrl.replace(
+      /^(https?:\/\/)(localhost|127\.0\.0\.1)/,
+      (_match, protocol: string) => `${protocol}10.0.2.2`
+    )
+  );
+}
+
+// Read API URL from app.json extra config; Android cannot reach host localhost.
+const API_URL = resolveApiUrl(Constants.expoConfig?.extra?.apiUrl as string);
 
 const api = axios.create({
   baseURL: API_URL,

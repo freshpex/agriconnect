@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, ScrollView, Alert, TouchableOpacity } from "react-native";
+import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useListing } from "../../src/hooks/useListings";
@@ -29,6 +30,16 @@ export default function ListingDetailScreen() {
 
   const category = CROP_CATEGORIES.find((c) => c.value === listing.category);
   const isOwn = listing.farmer?._id === user?.id;
+  const coordinates = listing.coordinates?.coordinates;
+  const hasCoordinates = Array.isArray(coordinates) && coordinates.length === 2;
+  const latitude = hasCoordinates ? coordinates![1] : undefined;
+  const longitude = hasCoordinates ? coordinates![0] : undefined;
+
+  function openMap() {
+    if (latitude === undefined || longitude === undefined) return;
+    const url = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=14/${latitude}/${longitude}`;
+    Linking.openURL(url);
+  }
 
   async function handleOrder() {
     const qty = parseFloat(quantity);
@@ -116,6 +127,12 @@ export default function ListingDetailScreen() {
               label="Available"
               value={`${listing.quantity} ${listing.unit}`}
             />
+            {typeof listing.trustScore === "number" && (
+              <DetailRow
+                label="Trust Score"
+                value={`${listing.trustScore}/100 (${listing.trustDecision || "pending"})`}
+              />
+            )}
             {listing.harvestDate && (
               <DetailRow
                 label="Harvest Date"
@@ -128,6 +145,18 @@ export default function ListingDetailScreen() {
             <DetailRow label="Listed" value={timeAgo(listing.createdAt)} />
             <DetailRow label="Views" value={`${listing.views}`} />
           </View>
+
+          {hasCoordinates &&
+          latitude !== undefined &&
+          longitude !== undefined ? (
+            <View className="mb-5">
+              <Button
+                title="View on OpenStreetMap"
+                variant="outline"
+                onPress={openMap}
+              />
+            </View>
+          ) : null}
 
           {/* Seller Info */}
           <View className="bg-gray-50 rounded-2xl p-4 mb-5">
@@ -210,6 +239,19 @@ export default function ListingDetailScreen() {
               )}
             </View>
           )}
+
+          <View className="mt-6">
+            <Button
+              title="Report Issue"
+              variant="outline"
+              onPress={() =>
+                router.push({
+                  pathname: "/report-issue",
+                  params: { targetType: "listing", targetId: listing._id },
+                })
+              }
+            />
+          </View>
         </View>
       </ScrollView>
     </>
