@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,11 +13,18 @@ import { Loading, EmptyState } from "../../src/components/ui";
 
 export default function OrdersScreen() {
   const { user } = useAuth();
+  const isFarmer = user?.role === "farmer";
   const [viewAs, setViewAs] = useState<"buyer" | "seller">(
-    user?.role === "farmer" ? "seller" : "buyer"
+    isFarmer ? "seller" : "buyer"
   );
 
   const { data: orders, isLoading } = useMyOrders({ role: viewAs });
+
+  useEffect(() => {
+    if (!isFarmer && viewAs !== "buyer") {
+      setViewAs("buyer");
+    }
+  }, [isFarmer, viewAs]);
 
   if (isLoading) return <Loading />;
 
@@ -38,19 +45,21 @@ export default function OrdersScreen() {
             My Purchases
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setViewAs("seller")}
-          className="flex-1 py-2.5 rounded-lg items-center"
-          style={viewAs === "seller" ? styles.activeTab : undefined}
-        >
-          <Text
-            className={`font-semibold ${
-              viewAs === "seller" ? "text-primary-700" : "text-gray-500"
-            }`}
+        {isFarmer ? (
+          <TouchableOpacity
+            onPress={() => setViewAs("seller")}
+            className="flex-1 py-2.5 rounded-lg items-center"
+            style={viewAs === "seller" ? styles.activeTab : undefined}
           >
-            My Sales
-          </Text>
-        </TouchableOpacity>
+            <Text
+              className={`font-semibold ${
+                viewAs === "seller" ? "text-primary-700" : "text-gray-500"
+              }`}
+            >
+              My Sales
+            </Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <FlatList

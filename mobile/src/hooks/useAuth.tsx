@@ -4,6 +4,8 @@ import { authApi } from "../api/auth";
 import { onAuthExpired } from "../api/client";
 import type { User } from "../types";
 
+type SignupRole = Exclude<User["role"], "admin">;
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -13,7 +15,7 @@ interface AuthContextType {
     name: string,
     phone: string,
     password: string,
-    role?: string
+    role?: SignupRole
   ) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -77,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     name: string,
     phone: string,
     password: string,
-    role?: string
+    role?: SignupRole
   ) {
     const res = await authApi.register({ name, phone, password, role });
     const { token: newToken, user: newUser } = res.data;

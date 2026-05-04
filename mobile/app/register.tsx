@@ -43,7 +43,7 @@ export default function RegisterScreen() {
         password,
         role
       );
-      router.replace("/(tabs)");
+      router.replace(role === "farmer" ? "/(tabs)/profile" : "/(tabs)");
     } catch (err: unknown) {
       Alert.alert("Registration Failed", getErrorMessage(err));
     } finally {

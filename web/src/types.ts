@@ -1,4 +1,4 @@
-export type Role = "farmer" | "buyer";
+export type Role = "farmer" | "buyer" | "admin";
 
 export type AccountTypeChangeStatus = "pending" | "approved" | "rejected";
 
@@ -139,6 +139,16 @@ export interface PaginatedListings {
 export interface PaginatedOrders {
   orders: Order[];
   pagination?: Pagination;
+}
+
+export interface PaginatedReports {
+  reports: Report[];
+  pagination: Pagination;
+}
+
+export interface PaginatedUsers {
+  users: User[];
+  pagination: Pagination;
 }
 
 export interface ApiMessage {

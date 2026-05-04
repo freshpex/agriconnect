@@ -6,6 +6,7 @@ import listingRoutes from "./listings";
 import orderRoutes from "./orders";
 import reportRoutes from "./reports";
 import auditRoutes from "./audits";
+import adminRoutes from "./admin";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/listings", listingRoutes);
 router.use("/orders", orderRoutes);
 router.use("/reports", reportRoutes);
 router.use("/audits", auditRoutes);
+router.use("/admin", adminRoutes);
 
 export default router;

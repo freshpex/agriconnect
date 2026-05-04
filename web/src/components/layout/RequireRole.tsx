@@ -24,6 +24,41 @@ export function RequireRole({
   }
 
   if (!auth.user || !allowedRoles.includes(auth.user.role)) {
+    const requiresFarmerOnly =
+      allowedRoles.length === 1 && allowedRoles[0] === "farmer";
+
+    if (!requiresFarmerOnly) {
+      return (
+        <section className="mx-auto max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white text-amber-700 ring-1 ring-amber-100">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-black uppercase text-amber-700">
+                Restricted area
+              </p>
+              <h1 className="mt-2 text-2xl font-black text-stone-950">
+                You do not have permission to open this page.
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-stone-700">
+                This section is available only to authorized account roles.
+              </p>
+              <div className="mt-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                >
+                  Back to market
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
     return (
       <section className="mx-auto max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row">

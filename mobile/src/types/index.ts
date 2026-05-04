@@ -10,9 +10,10 @@ export interface AccountTypeChangeRequest {
 
 export interface User {
   id: string;
+  _id?: string;
   name: string;
   phone: string;
-  role: "farmer" | "buyer";
+  role: "farmer" | "buyer" | "admin";
   accountTypeChangeRequest?: AccountTypeChangeRequest;
   kycVerified: boolean;
   simSwapChecked: boolean;
@@ -153,6 +154,26 @@ export interface ReportCreateInput {
   targetId?: string;
   reason: string;
   description?: string;
+}
+
+export interface PaginatedReports {
+  reports: Report[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface PaginatedUsers {
+  users: User[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 export type CropCategory =

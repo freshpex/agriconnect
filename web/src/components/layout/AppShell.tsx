@@ -1,12 +1,14 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   ClipboardList,
+  FileWarning,
   Home,
   Leaf,
   LogOut,
   Menu,
   PackagePlus,
   UserRound,
+  Users,
   X,
 } from "lucide-react";
 import clsx from "clsx";
@@ -33,6 +35,18 @@ const navItems: Array<{
     roles: ["farmer"],
   },
   { to: "/orders", label: "Orders", icon: ClipboardList },
+  {
+    to: "/admin/reports",
+    label: "Reports",
+    icon: FileWarning,
+    roles: ["admin"],
+  },
+  {
+    to: "/admin/users",
+    label: "Users",
+    icon: Users,
+    roles: ["admin"],
+  },
   { to: "/profile", label: "Profile", icon: UserRound },
 ];
 
@@ -82,6 +96,12 @@ export function AppShell() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const visibleNavItems = getVisibleNavItems(user?.role);
+  const mobileNavColumns =
+    visibleNavItems.length >= 5
+      ? "grid-cols-5"
+      : visibleNavItems.length === 3
+        ? "grid-cols-3"
+        : "grid-cols-4";
 
   function signOut() {
     logout();
@@ -203,10 +223,7 @@ export function AppShell() {
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 px-2 pb-[calc(0.5rem_+_env(safe-area-inset-bottom))] pt-2 shadow-soft backdrop-blur lg:hidden">
         <div
-          className={clsx(
-            "grid gap-1",
-            visibleNavItems.length === 3 ? "grid-cols-3" : "grid-cols-4"
-          )}
+          className={clsx("grid gap-1", mobileNavColumns)}
         >
           {visibleNavItems.map((item) => {
             const Icon = item.icon;

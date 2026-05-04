@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -61,15 +61,23 @@ export default function ProfileScreen() {
       >
         <View className="items-center">
           <View className="w-20 h-20 rounded-full bg-white/20 items-center justify-center mb-3">
-            <Text className="text-4xl">
-              {user?.role === "farmer" ? "🧑‍🌾" : "🛒"}
-            </Text>
+            <Ionicons
+              name={
+                user?.role === "farmer"
+                  ? "leaf-outline"
+                  : user?.role === "admin"
+                    ? "shield-checkmark-outline"
+                    : "cart-outline"
+              }
+              size={36}
+              color="#ffffff"
+            />
           </View>
           <Text className="text-2xl font-bold text-white">{user?.name}</Text>
           <Text className="text-primary-200 mt-1">{user?.phone}</Text>
           <View className="flex-row gap-2 mt-3">
             <Badge
-              label={user?.role === "farmer" ? "Farmer" : "Buyer"}
+              label={user?.role === "farmer" ? "Farmer" : user?.role === "admin" ? "Admin" : "Buyer"}
               color="green"
             />
             {user?.kycVerified && <Badge label="KYC Verified" color="blue" />}
@@ -80,7 +88,7 @@ export default function ProfileScreen() {
       {/* Verification Status */}
       <View className="mx-4 mt-4 bg-white rounded-2xl p-4 border border-gray-100">
         <Text className="text-lg font-bold text-gray-900 mb-3">
-          🔐 Verification Status
+        🔐 Verification Status
         </Text>
 
         <VerificationRow
@@ -94,7 +102,7 @@ export default function ProfileScreen() {
           onVerify={() => router.push("/verify-number")}
         />
         <VerificationRow
-          label="Farm Location"
+          label="Farm (Your) Location"
           verified={user?.locationVerified ?? false}
           onVerify={() => router.push("/verify-location")}
         />

@@ -139,3 +139,25 @@ export const updateReportRules = [
     .withMessage("Resolution note must be 1000 characters or less"),
   body("assignedTo").optional().isMongoId().withMessage("Invalid assignee ID"),
 ];
+
+export const updateUserRules = [
+  body("role")
+    .optional()
+    .isIn(["farmer", "buyer", "admin"])
+    .withMessage("Role must be farmer, buyer, or admin"),
+  body("isActive")
+    .optional()
+    .isBoolean()
+    .withMessage("isActive must be a boolean"),
+];
+
+export const reviewFarmerAccessRequestRules = [
+  body("status")
+    .isIn(["approved", "rejected"])
+    .withMessage("Status must be approved or rejected"),
+  body("note")
+    .optional()
+    .isString()
+    .isLength({ max: 500 })
+    .withMessage("Note must be 500 characters or less"),
+];

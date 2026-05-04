@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { ShoppingBag } from "lucide-react";
@@ -25,8 +25,9 @@ const statuses: Array<{ value: OrderStatus | ""; label: string }> = [
 export function OrdersPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isFarmer = user?.role === "farmer";
   const [viewAs, setViewAs] = useState<"buyer" | "seller">(
-    user?.role === "farmer" ? "seller" : "buyer"
+    isFarmer ? "seller" : "buyer"
   );
   const [status, setStatus] = useState<OrderStatus | "">("");
   const [page, setPage] = useState(1);
@@ -37,6 +38,12 @@ export function OrdersPage() {
     limit: 20,
   });
 
+  useEffect(() => {
+    if (!isFarmer && viewAs !== "buyer") {
+      setViewAs("buyer");
+    }
+  }, [isFarmer, viewAs]);
+
   return (
     <div className="space-y-6">
       <section className="glass-panel rounded-lg border border-stone-200 p-5 shadow-sm sm:p-6">
@@ -46,11 +53,12 @@ export function OrdersPage() {
               Orders
             </p>
             <h1 className="mt-4 text-3xl font-black text-stone-950">
-              Purchases and sales
+              {isFarmer ? "Purchases and sales" : "Purchases"}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
-              Review authenticated buyer and seller orders, then advance the
-              status transitions allowed by the backend.
+              {isFarmer
+                ? "Review authenticated buyer and seller orders, then advance the status transitions allowed by the backend."
+                : "Review your purchases and track status updates from farmers."}
             </p>
           </div>
           <Select
@@ -70,26 +78,32 @@ export function OrdersPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-2 rounded-lg bg-stone-100 p-1">
-        {(["buyer", "seller"] as const).map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => {
-              setViewAs(item);
-              setPage(1);
-            }}
-            className={clsx(
-              "rounded-md px-4 py-2.5 text-sm font-black transition",
-              viewAs === item
-                ? "bg-white text-leaf-800 shadow-sm"
-                : "text-stone-500 hover:text-stone-800"
-            )}
-          >
-            {item === "buyer" ? "My purchases" : "My sales"}
-          </button>
-        ))}
-      </div>
+      {isFarmer ? (
+        <div className="grid grid-cols-2 gap-2 rounded-lg bg-stone-100 p-1">
+          {(["buyer", "seller"] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => {
+                setViewAs(item);
+                setPage(1);
+              }}
+              className={clsx(
+                "rounded-md px-4 py-2.5 text-sm font-black transition",
+                viewAs === item
+                  ? "bg-white text-leaf-800 shadow-sm"
+                  : "text-stone-500 hover:text-stone-800"
+              )}
+            >
+              {item === "buyer" ? "My purchases" : "My sales"}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg bg-stone-100 px-4 py-3 text-sm font-black text-leaf-800">
+          My purchases
+        </div>
+      )}
 
       {isError ? <Alert type="error">{getApiError(error)}</Alert> : null}
 

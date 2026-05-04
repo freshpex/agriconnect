@@ -1,12 +1,14 @@
 import { api } from "./client";
 import type { AuthResponse, Role, User } from "../types";
 
+type SignupRole = Exclude<Role, "admin">;
+
 export const authApi = {
   register(data: {
     name: string;
     phone: string;
     password: string;
-    role?: Role;
+    role?: SignupRole;
   }) {
     return api.post<AuthResponse>("/auth/register", data);
   },

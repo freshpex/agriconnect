@@ -11,6 +11,8 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 import { OrderDetailPage } from "./pages/OrderDetailPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { AdminReportsPage } from "./pages/AdminReportsPage";
+import { AdminUsersPage } from "./pages/AdminUsersPage";
 
 export default function App() {
   return (
@@ -53,6 +55,22 @@ export default function App() {
         />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders/:id" element={<OrderDetailPage />} />
+        <Route
+          path="admin/reports"
+          element={
+            <RequireRole allowedRoles={["admin"]}>
+              <AdminReportsPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="admin/users"
+          element={
+            <RequireRole allowedRoles={["admin"]}>
+              <AdminUsersPage />
+            </RequireRole>
+          }
+        />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="404" element={<NotFoundPage />} />
       </Route>

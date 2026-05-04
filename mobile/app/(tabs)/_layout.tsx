@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function TabLayout() {
   const { user } = useAuth();
   const isFarmer = user?.role === "farmer";
+  const isAdmin = user?.role === "admin";
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 8);
 
@@ -62,8 +63,29 @@ export default function TabLayout() {
         name="orders"
         options={{
           title: "Orders",
+          href: isAdmin ? null : undefined,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="receipt-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: "Reports",
+          href: isAdmin ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="alert-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="manage-users"
+        options={{
+          title: "Users",
+          href: isAdmin ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" size={size} color={color} />
           ),
         }}
       />

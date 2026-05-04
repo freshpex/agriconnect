@@ -12,6 +12,8 @@ import { onAuthExpired } from "../api/client";
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "../config";
 import type { Role, User } from "../types";
 
+type SignupRole = Exclude<Role, "admin">;
+
 interface AuthContextValue {
   user: User | null;
   token: string | null;
@@ -22,7 +24,7 @@ interface AuthContextValue {
     name: string,
     phone: string,
     password: string,
-    role: Role
+    role: SignupRole
   ) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -104,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const register = useCallback(
-    async (name: string, phone: string, password: string, role: Role) => {
+    async (name: string, phone: string, password: string, role: SignupRole) => {
       const response = await authApi.register({ name, phone, password, role });
       persistAuth(response.data.token, response.data.user);
       await refreshUser().catch(() => undefined);

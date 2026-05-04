@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import {
   ArrowRight,
   LockKeyhole,
@@ -18,18 +18,20 @@ import { buildFullPhone, validatePhone } from "../utils/phone";
 import { getApiError } from "../utils/format";
 import type { Role } from "../types";
 
+type SignupRole = Exclude<Role, "admin">;
+
 export function AuthPage({ mode }: { mode: "login" | "register" }) {
   const auth = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [name, setName] = useState("");
   const [countryCode, setCountryCode] = useState("NG");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<Role>("farmer");
+  const [role, setRole] = useState<SignupRole>("farmer");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
   const country = useMemo(
     () => COUNTRIES.find((item) => item.code === countryCode) || COUNTRIES[0],
@@ -37,7 +39,7 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
   );
 
   if (auth.isLoading) return <Spinner label="Checking your session" />;
-  if (auth.isAuthenticated) return <Navigate to="/" replace />;
+  if (auth.isAuthenticated) return <Navigate to={redirectTo || "/"} replace />;
 
   const destination =
     (location.state as { from?: { pathname?: string } } | null)?.from
@@ -73,11 +75,13 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
     try {
       const fullPhone = buildFullPhone(country, phone);
       if (mode === "login") {
+        setRedirectTo(destination);
         await auth.login(fullPhone, password);
       } else {
+        const registerDestination = role === "farmer" ? "/profile" : destination;
+        setRedirectTo(registerDestination);
         await auth.register(name.trim(), fullPhone, password, role);
       }
-      navigate(destination, { replace: true });
     } catch (err) {
       setError(getApiError(err));
     } finally {
@@ -175,7 +179,7 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
                   <div>
                     <span className="app-label">Account type</span>
                     <div className="grid grid-cols-2 gap-2 rounded-lg bg-stone-100 p-1">
-                      {(["farmer", "buyer"] as Role[]).map((item) => (
+                      {(["farmer", "buyer"] as SignupRole[]).map((item) => (
                         <button
                           key={item}
                           type="button"
