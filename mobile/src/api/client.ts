@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { storage } from "../utils/storage";
 
-const DEFAULT_API_URL = "https://agriconnectbackend-qtx3.onrender.com/api";
+const DEFAULT_API_URL = "https://node-app-131265199003.us-west1.run.app/api";
 
 type ExpoConfigWithHost = {
   hostUri?: string;

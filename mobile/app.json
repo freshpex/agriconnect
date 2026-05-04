@@ -38,7 +38,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiUrl": "https://agriconnectbackend-qtx3.onrender.com/api",
+      "apiUrl": "https://node-app-131265199003.us-west1.run.app/api",
       "eas": {
         "projectId": "8a7bfbfc-836c-4ad9-bd6f-563485ef214c"
       }
