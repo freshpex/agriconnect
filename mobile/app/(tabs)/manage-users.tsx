@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, FlatList, Alert, TouchableOpacity, ScrollView } from "react-native";
 import { useAuth } from "../../src/hooks/useAuth";
 import {
+  useDeleteUser,
   useAdminUsers,
   useReviewFarmerAccess,
   useUpdateUser,
@@ -56,6 +57,7 @@ export default function ManageUsersScreen() {
     limit: 50,
   });
   const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
   const reviewFarmerAccess = useReviewFarmerAccess();
 
   if (user?.role !== "admin") {
@@ -107,6 +109,32 @@ export default function ManageUsersScreen() {
     } finally {
       setActiveUserId(null);
     }
+  }
+
+  function deleteUserWithConfirm(target: User) {
+    Alert.alert(
+      "Delete user",
+      `Delete ${target.name} (${target.phone})? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const id = getUserId(target);
+            setActiveUserId(id);
+            try {
+              const response = await deleteUser.mutateAsync(id);
+              Alert.alert("Deleted", response.data.message);
+            } catch (err) {
+              Alert.alert("Delete failed", getErrorMessage(err));
+            } finally {
+              setActiveUserId(null);
+            }
+          },
+        },
+      ]
+    );
   }
 
   const users = data?.users || [];
@@ -212,7 +240,9 @@ export default function ManageUsersScreen() {
             item.accountTypeChangeRequest?.status === "pending";
           const isBusy =
             activeUserId === getUserId(item) &&
-            (updateUser.isPending || reviewFarmerAccess.isPending);
+            (updateUser.isPending ||
+              reviewFarmerAccess.isPending ||
+              deleteUser.isPending);
 
           return (
             <View className="bg-white border border-gray-100 rounded-2xl p-4 mb-3">
@@ -272,6 +302,13 @@ export default function ManageUsersScreen() {
                     fullWidth={false}
                   />
                 ) : null}
+                <Button
+                  title="Delete User"
+                  onPress={() => deleteUserWithConfirm(item)}
+                  loading={isBusy}
+                  variant="danger"
+                  fullWidth={false}
+                />
               </View>
             </View>
           );

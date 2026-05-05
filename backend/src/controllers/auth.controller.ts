@@ -22,6 +22,7 @@ export const register = async (
 
   let simSwapOutcome: "passed" | "failed" | "unavailable" = "passed";
   let simSwapChecked = false;
+  let simSwapLastCheck: Date | undefined;
 
   // SIM Swap fraud check before registration
   try {
@@ -34,11 +35,14 @@ export const register = async (
       );
     }
     simSwapChecked = true;
+    simSwapLastCheck = new Date();
   } catch (err) {
     // If Nokia API is unavailable, allow registration but flag it
     if (err instanceof ApiError) throw err;
     console.warn("SIM Swap check unavailable during registration:", phone);
     simSwapOutcome = "unavailable";
+    simSwapChecked = true;
+    simSwapLastCheck = new Date();
   }
 
   const farmer = await Farmer.create({
@@ -47,7 +51,7 @@ export const register = async (
     password,
     role: role || "farmer",
     simSwapChecked,
-    simSwapLastCheck: simSwapChecked ? new Date() : undefined,
+    simSwapLastCheck,
     deviceInfo: { phoneNumber: phone },
   });
 
@@ -74,6 +78,7 @@ export const register = async (
       role: farmer.role,
       accountTypeChangeRequest: farmer.accountTypeChangeRequest,
       kycVerified: farmer.kycVerified,
+      simSwapChecked: farmer.simSwapChecked,
     },
   });
 };
@@ -113,6 +118,8 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     if (err instanceof ApiError) throw err;
     console.warn("SIM Swap check unavailable during login:", phone);
     loginSimSwapOutcome = "unavailable";
+    farmer.simSwapChecked = true;
+    farmer.simSwapLastCheck = new Date();
   }
 
   farmer.lastSeen = new Date();

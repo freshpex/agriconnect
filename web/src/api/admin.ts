@@ -25,6 +25,9 @@ export const adminApi = {
   ) {
     return api.patch<{ user: User }>(`/admin/users/${id}`, data);
   },
+  deleteUser(id: string) {
+    return api.delete<{ message: string }>(`/admin/users/${id}`);
+  },
   reviewFarmerAccess(
     id: string,
     data: {

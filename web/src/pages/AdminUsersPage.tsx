@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { ShieldCheck, Users } from "lucide-react";
 import {
   useAdminUsers,
+  useDeleteUser,
   useReviewFarmerAccess,
   useUpdateUser,
 } from "../hooks/useAdmin";
@@ -65,6 +66,7 @@ export function AdminUsersPage() {
     limit: 20,
   });
   const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
   const reviewFarmerAccess = useReviewFarmerAccess();
 
   async function submitSearch(event: FormEvent) {
@@ -103,6 +105,25 @@ export function AdminUsersPage() {
             ? "Farmer access approved."
             : "Farmer access request rejected.",
       });
+    } catch (err) {
+      setMessage({ type: "error", text: getApiError(err) });
+    } finally {
+      setActiveUserId(null);
+    }
+  }
+
+  async function handleDeleteUser(targetUser: User) {
+    const id = userId(targetUser);
+    const confirmed = window.confirm(
+      `Delete user "${targetUser.name}" (${targetUser.phone})? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setMessage(null);
+    setActiveUserId(id);
+    try {
+      const response = await deleteUser.mutateAsync(id);
+      setMessage({ type: "success", text: response.data.message });
     } catch (err) {
       setMessage({ type: "error", text: getApiError(err) });
     } finally {
@@ -198,7 +219,9 @@ export function AdminUsersPage() {
               item.accountTypeChangeRequest?.status === "pending";
             const isBusy =
               activeUserId === userId(item) &&
-              (updateUser.isPending || reviewFarmerAccess.isPending);
+              (updateUser.isPending ||
+                reviewFarmerAccess.isPending ||
+                deleteUser.isPending);
 
             return (
               <article
@@ -271,6 +294,14 @@ export function AdminUsersPage() {
                       Set as farmer
                     </Button>
                   ) : null}
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={() => handleDeleteUser(item)}
+                    isLoading={isBusy}
+                  >
+                    Delete user
+                  </Button>
                 </div>
               </article>
             );

@@ -182,3 +182,33 @@ export const reviewFarmerAccessRequest = async (
 
   res.json({ user: serializeUser(user) });
 };
+
+export const deleteUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+  const currentUserId = req.user?.id;
+
+  if (currentUserId && id === currentUserId) {
+    throw new ApiError("You cannot delete your own account", 400);
+  }
+
+  const user = await Farmer.findById(id);
+  if (!user) throw new ApiError("User not found", 404);
+
+  if (user.role === "admin") {
+    const remainingAdmins = await Farmer.countDocuments({
+      role: "admin",
+      _id: { $ne: user._id },
+      isActive: true,
+    });
+    if (remainingAdmins < 1) {
+      throw new ApiError("Cannot delete the last active admin account", 400);
+    }
+  }
+
+  await Farmer.findByIdAndDelete(id);
+
+  res.json({ message: "User deleted" });
+};
