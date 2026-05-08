@@ -23,6 +23,7 @@ export interface IListing extends Document {
   reviewedBy?: mongoose.Types.ObjectId;
   reviewedAt?: Date;
   reviewNote?: string;
+  clientRequestId?: string;
   active: boolean;
   views: number;
   createdAt: Date;
@@ -74,6 +75,7 @@ const ListingSchema = new Schema<IListing>(
     reviewedBy: { type: Schema.Types.ObjectId, ref: "Farmer" },
     reviewedAt: Date,
     reviewNote: { type: String, maxlength: 500 },
+    clientRequestId: { type: String, trim: true, maxlength: 80 },
     active: { type: Boolean, default: true },
     views: { type: Number, default: 0 },
   },
@@ -84,5 +86,12 @@ ListingSchema.index({ coordinates: "2dsphere" });
 ListingSchema.index({ cropName: "text", description: "text" });
 ListingSchema.index({ category: 1, active: 1 });
 ListingSchema.index({ farmer: 1 });
+ListingSchema.index(
+  { farmer: 1, clientRequestId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { clientRequestId: { $type: "string" } },
+  }
+);
 
 export const Listing = mongoose.model<IListing>("Listing", ListingSchema);

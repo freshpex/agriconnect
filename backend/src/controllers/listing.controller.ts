@@ -23,6 +23,34 @@ export const createListing = async (
     throw new ApiError("Only farmer accounts can create listings", 403);
   }
 
+  const {
+    cropName,
+    category,
+    quantity,
+    unit,
+    pricePerUnit,
+    currency,
+    description,
+    images,
+    latitude,
+    longitude,
+    farmAddress,
+    harvestDate,
+    clientRequestId,
+  } = req.body;
+
+  if (clientRequestId) {
+    const existingListing = await Listing.findOne({
+      farmer: req.user!.id,
+      clientRequestId,
+    }).lean();
+
+    if (existingListing) {
+      res.json({ listing: existingListing });
+      return;
+    }
+  }
+
   try {
     const simResult = await checkSimSwap(farmer.phone, 24);
     if (simResult.swapped) {
@@ -60,21 +88,6 @@ export const createListing = async (
       metadata: { windowHours: 24 },
     });
   }
-
-  const {
-    cropName,
-    category,
-    quantity,
-    unit,
-    pricePerUnit,
-    currency,
-    description,
-    images,
-    latitude,
-    longitude,
-    farmAddress,
-    harvestDate,
-  } = req.body;
 
   const lat = latitude ? parseFloat(latitude) : undefined;
   const lng = longitude ? parseFloat(longitude) : undefined;
@@ -140,6 +153,7 @@ export const createListing = async (
     trustScore: trustResult.score,
     trustDecision: trustResult.decision,
     reviewStatus: trustResult.decision === "review" ? "pending" : "approved",
+    clientRequestId,
     active: trustResult.decision === "review" ? false : true,
   };
 

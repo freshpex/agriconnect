@@ -11,6 +11,7 @@ import { FarmerAccessRequired } from "../src/components/FarmerAccessRequired";
 import { UnitSelector } from "../src/components/listings/UnitSelector";
 import { KeyboardAwareScrollView } from "../src/components/layout/KeyboardAwareScrollView";
 import { Button, Input } from "../src/components/ui";
+import { isOfflineQueueResult } from "../src/utils/offlineQueue";
 import { CROP_CATEGORIES, getErrorMessage } from "../src/utils/helpers";
 
 export default function CreateListingScreen() {
@@ -74,7 +75,7 @@ export default function CreateListingScreen() {
     }
 
     try {
-      await createListing.mutateAsync({
+      const result = await createListing.mutateAsync({
         cropName: cropName.trim(),
         category,
         quantity: parseFloat(quantity),
@@ -86,6 +87,15 @@ export default function CreateListingScreen() {
         latitude: latitude ?? undefined,
         longitude: longitude ?? undefined,
       });
+
+      if (isOfflineQueueResult(result)) {
+        Alert.alert(
+          "Saved Offline",
+          "Your listing is saved on this device and will submit automatically when your connection returns.",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+        return;
+      }
 
       Alert.alert("Success", "Your listing has been created!", [
         { text: "OK", onPress: () => router.back() },

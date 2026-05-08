@@ -13,7 +13,24 @@ export const createOrder = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const { listingId, quantity, deliveryAddress, notes } = req.body;
+  const { listingId, quantity, deliveryAddress, notes, clientRequestId } =
+    req.body;
+
+  if (clientRequestId) {
+    const existingOrder = await Order.findOne({
+      buyer: req.user!.id,
+      clientRequestId,
+    })
+      .populate("listing", "cropName pricePerUnit images category farmAddress")
+      .populate("buyer", "name phone")
+      .populate("seller", "name phone farmAddress")
+      .lean();
+
+    if (existingOrder) {
+      res.json({ order: existingOrder });
+      return;
+    }
+  }
 
   const listing = await Listing.findById(listingId);
   if (!listing) throw new ApiError("Listing not found", 404);
@@ -67,12 +84,14 @@ export const createOrder = async (
     buyerPhone: req.user!.phone,
     deliveryAddress,
     notes,
+    clientRequestId,
     qodSessionId,
   });
 
   const populated = await Order.findById(order._id)
-    .populate("listing", "cropName pricePerUnit images")
-    .populate("seller", "name phone")
+    .populate("listing", "cropName pricePerUnit images category farmAddress")
+    .populate("buyer", "name phone")
+    .populate("seller", "name phone farmAddress")
     .lean();
 
   res.status(201).json({ order: populated });
@@ -202,5 +221,11 @@ export const updateOrderStatus = async (
 
   await order.save();
 
-  res.json({ order });
+  const populated = await Order.findById(order._id)
+    .populate("listing", "cropName pricePerUnit images category farmAddress")
+    .populate("buyer", "name phone")
+    .populate("seller", "name phone farmAddress")
+    .lean();
+
+  res.json({ order: populated });
 };

@@ -8,6 +8,7 @@ import { useCreateOrder } from "../../src/hooks/useOrders";
 import { useAuth } from "../../src/hooks/useAuth";
 import { KeyboardAwareScrollView } from "../../src/components/layout/KeyboardAwareScrollView";
 import { Loading, Button, Badge, Input } from "../../src/components/ui";
+import { isOfflineQueueResult } from "../../src/utils/offlineQueue";
 import {
   formatCurrency,
   formatDate,
@@ -54,11 +55,26 @@ export default function ListingDetailScreen() {
     }
 
     try {
-      await createOrder.mutateAsync({
+      const result = await createOrder.mutateAsync({
         listingId: listing!._id,
         quantity: qty,
         deliveryAddress: deliveryAddress || undefined,
       });
+
+      if (isOfflineQueueResult(result)) {
+        Alert.alert(
+          "Order Saved Offline",
+          "Your order is saved on this device and will be placed automatically when your connection returns.",
+          [
+            {
+              text: "View Orders",
+              onPress: () => router.push("/(tabs)/orders"),
+            },
+          ]
+        );
+        return;
+      }
+
       Alert.alert("Order Placed!", "The seller will be notified.", [
         { text: "View Orders", onPress: () => router.push("/(tabs)/orders") },
       ]);

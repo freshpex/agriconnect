@@ -58,6 +58,7 @@ export const createListingRules = [
   body("longitude").optional().isFloat({ min: -180, max: 180 }),
   body("farmAddress").optional().isString(),
   body("harvestDate").optional().isISO8601(),
+  body("clientRequestId").optional().isString().isLength({ max: 80 }),
 ];
 
 export const updateListingRules = [
@@ -88,6 +89,7 @@ export const createOrderRules = [
     .withMessage("Quantity must be greater than 0"),
   body("deliveryAddress").optional().isString(),
   body("notes").optional().isString().isLength({ max: 300 }),
+  body("clientRequestId").optional().isString().isLength({ max: 80 }),
 ];
 
 export const updateOrderStatusRules = [

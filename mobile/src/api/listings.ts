@@ -1,6 +1,21 @@
 import api from "./client";
 import type { Listing, PaginatedResponse } from "../types";
 
+export interface CreateListingInput {
+  cropName: string;
+  category?: string;
+  quantity: number;
+  unit: string;
+  pricePerUnit: number;
+  currency?: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  farmAddress?: string;
+  harvestDate?: string;
+  clientRequestId?: string;
+}
+
 export interface ListingFilters {
   search?: string;
   category?: string;
@@ -28,19 +43,7 @@ export const listingsApi = {
     return api.get<{ listings: Listing[] }>("/listings/user/mine");
   },
 
-  create(data: {
-    cropName: string;
-    category?: string;
-    quantity: number;
-    unit: string;
-    pricePerUnit: number;
-    currency?: string;
-    description?: string;
-    latitude?: number;
-    longitude?: number;
-    farmAddress?: string;
-    harvestDate?: string;
-  }) {
+  create(data: CreateListingInput) {
     return api.post<{ listing: Listing }>("/listings", data);
   },
 

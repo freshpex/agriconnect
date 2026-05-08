@@ -15,6 +15,10 @@ export default function ProfileScreen() {
   const [farmerAccessNote, setFarmerAccessNote] = useState("");
   const farmerAccessRequest = user?.accountTypeChangeRequest;
   const farmerAccessPending = farmerAccessRequest?.status === "pending";
+  const needsIdentityVerification =
+    !user?.kycVerified ||
+    !user?.numberVerified ||
+    (user?.role === "farmer" && !user?.locationVerified);
 
   function handleLogout() {
     Alert.alert("Logout", "Are you sure you want to sign out?", [
@@ -76,6 +80,29 @@ export default function ProfileScreen() {
           </View>
         </View>
       </View>
+
+      {needsIdentityVerification ? (
+        <View className="mx-4 mt-4 bg-amber-50 rounded-2xl p-4 border border-amber-100">
+          <View className="flex-row items-start gap-3">
+            <View className="w-10 h-10 rounded-full bg-amber-100 items-center justify-center">
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={22}
+                color="#b45309"
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-amber-900">
+                Please verify your identity to improve your trust score
+              </Text>
+              <Text className="text-sm text-amber-800 mt-1 leading-5">
+                Complete KYC, phone verification, and farm location checks so
+                buyers can trust your listings.
+              </Text>
+            </View>
+          </View>
+        </View>
+      ) : null}
 
       {/* Verification Status */}
       <View className="mx-4 mt-4 bg-white rounded-2xl p-4 border border-gray-100">

@@ -1,13 +1,37 @@
 import { Response } from "express";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import config from "../config";
-
-const jwtOptions = { expiresIn: config.jwt.expiresIn } as SignOptions;
-import { Farmer } from "../models/Farmer";
+import { Farmer, type IFarmer } from "../models/Farmer";
 import { AuthRequest } from "../middleware/auth";
 import { ApiError } from "../middleware/errorHandler";
 import { checkSimSwap } from "../services/nac";
 import { recordVerificationAudit } from "../utils/verificationAudit";
+
+const jwtOptions = { expiresIn: config.jwt.expiresIn } as SignOptions;
+
+function serializeUser(farmer: IFarmer) {
+  return {
+    id: farmer._id,
+    name: farmer.name,
+    phone: farmer.phone,
+    role: farmer.role,
+    accountTypeChangeRequest: farmer.accountTypeChangeRequest,
+    kycVerified: farmer.kycVerified,
+    simSwapChecked: farmer.simSwapChecked,
+    simSwapLastCheck: farmer.simSwapLastCheck,
+    numberVerified: farmer.numberVerified,
+    locationVerified: farmer.locationVerified,
+    farmAddress: farmer.farmAddress,
+    farmCoordinates: farmer.farmCoordinates,
+    profileImage: farmer.profileImage,
+    rating: farmer.rating,
+    totalSales: farmer.totalSales,
+    isActive: farmer.isActive,
+    lastSeen: farmer.lastSeen,
+    createdAt: farmer.createdAt,
+    updatedAt: farmer.updatedAt,
+  };
+}
 
 export const register = async (
   req: AuthRequest,
@@ -67,14 +91,7 @@ export const register = async (
 
   res.status(201).json({
     token,
-    user: {
-      id: farmer._id,
-      name: farmer.name,
-      phone: farmer.phone,
-      role: farmer.role,
-      accountTypeChangeRequest: farmer.accountTypeChangeRequest,
-      kycVerified: farmer.kycVerified,
-    },
+    user: serializeUser(farmer),
   });
 };
 
@@ -134,15 +151,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
 
   res.json({
     token,
-    user: {
-      id: farmer._id,
-      name: farmer.name,
-      phone: farmer.phone,
-      role: farmer.role,
-      accountTypeChangeRequest: farmer.accountTypeChangeRequest,
-      kycVerified: farmer.kycVerified,
-      simSwapChecked: farmer.simSwapChecked,
-    },
+    user: serializeUser(farmer),
   });
 };
 
@@ -150,24 +159,5 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
   const farmer = await Farmer.findById(req.user!.id);
   if (!farmer) throw new ApiError("User not found", 404);
 
-  res.json({
-    user: {
-      id: farmer._id,
-      name: farmer.name,
-      phone: farmer.phone,
-      role: farmer.role,
-      accountTypeChangeRequest: farmer.accountTypeChangeRequest,
-      kycVerified: farmer.kycVerified,
-      simSwapChecked: farmer.simSwapChecked,
-      numberVerified: farmer.numberVerified,
-      locationVerified: farmer.locationVerified,
-      farmAddress: farmer.farmAddress,
-      farmCoordinates: farmer.farmCoordinates,
-      profileImage: farmer.profileImage,
-      rating: farmer.rating,
-      totalSales: farmer.totalSales,
-      isActive: farmer.isActive,
-      createdAt: farmer.createdAt,
-    },
-  });
+  res.json({ user: serializeUser(farmer) });
 };

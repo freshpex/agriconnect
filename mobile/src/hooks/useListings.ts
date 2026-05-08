@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listingsApi, type ListingFilters } from "../api/listings";
+import { createListingWithOfflineQueue } from "../utils/offlineQueue";
 import type { Listing } from "../types";
 
 export function useListings(filters?: ListingFilters) {
@@ -28,7 +29,7 @@ export function useMyListings(enabled = true) {
 export function useCreateListing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: listingsApi.create,
+    mutationFn: createListingWithOfflineQueue,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["listings"] });
       queryClient.invalidateQueries({ queryKey: ["myListings"] });
