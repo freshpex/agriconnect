@@ -51,6 +51,7 @@ export const createListing = async (
     }
   }
 
+  const simSwapCheckedAt = new Date();
   try {
     const simResult = await checkSimSwap(farmer.phone, 24);
     if (simResult.swapped) {
@@ -88,6 +89,10 @@ export const createListing = async (
       metadata: { windowHours: 24 },
     });
   }
+
+  farmer.simSwapChecked = true;
+  farmer.simSwapLastCheck = simSwapCheckedAt;
+  await farmer.save();
 
   const lat = latitude ? parseFloat(latitude) : undefined;
   const lng = longitude ? parseFloat(longitude) : undefined;
@@ -154,7 +159,7 @@ export const createListing = async (
     trustDecision: trustResult.decision,
     reviewStatus: trustResult.decision === "review" ? "pending" : "approved",
     clientRequestId,
-    active: trustResult.decision === "review" ? false : true,
+    active: true,
   };
 
   if (lat !== undefined && lng !== undefined) {

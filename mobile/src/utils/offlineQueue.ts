@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 import axios from "axios";
+import api from "../api/client";
 import { listingsApi, type CreateListingInput } from "../api/listings";
 import { ordersApi, type CreateOrderInput } from "../api/orders";
 import { storage } from "./storage";
@@ -85,12 +86,25 @@ export function isOfflineQueueResult(
   return isObject(result) && result.queuedOffline === true;
 }
 
+async function probeBackendReachability() {
+  try {
+    await api.get("/health", { timeout: 4000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function hasUsableConnection() {
   try {
     const state = await NetInfo.fetch();
-    return state.isConnected !== false && state.isInternetReachable !== false;
+
+    if (state.isConnected === false) return false;
+    if (state.isInternetReachable === true) return true;
+
+    return probeBackendReachability();
   } catch {
-    return true;
+    return probeBackendReachability();
   }
 }
 
@@ -182,14 +196,18 @@ export async function createListingWithOfflineQueue(data: CreateListingInput) {
   };
 
   if (!(await hasUsableConnection())) {
-    return queueCreateListing(payload);
+    const queued = await queueCreateListing(payload);
+    flushOfflineQueue().catch(() => undefined);
+    return queued;
   }
 
   try {
     return await listingsApi.create(payload);
   } catch (error) {
     if (isRetryableNetworkError(error)) {
-      return queueCreateListing(payload);
+      const queued = await queueCreateListing(payload);
+      flushOfflineQueue().catch(() => undefined);
+      return queued;
     }
     throw error;
   }
@@ -202,14 +220,18 @@ export async function createOrderWithOfflineQueue(data: CreateOrderInput) {
   };
 
   if (!(await hasUsableConnection())) {
-    return queueCreateOrder(payload);
+    const queued = await queueCreateOrder(payload);
+    flushOfflineQueue().catch(() => undefined);
+    return queued;
   }
 
   try {
     return await ordersApi.create(payload);
   } catch (error) {
     if (isRetryableNetworkError(error)) {
-      return queueCreateOrder(payload);
+      const queued = await queueCreateOrder(payload);
+      flushOfflineQueue().catch(() => undefined);
+      return queued;
     }
     throw error;
   }
