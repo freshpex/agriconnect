@@ -2,13 +2,15 @@ import { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useRequestFarmerAccess } from "../../src/hooks/useFarmer";
 import { Badge, Button, Input } from "../../src/components/ui";
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const requestFarmerAccess = useRequestFarmerAccess();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -19,6 +21,12 @@ export default function ProfileScreen() {
     !user?.kycVerified ||
     !user?.numberVerified ||
     (user?.role === "farmer" && !user?.locationVerified);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshUser().catch(() => undefined);
+    }, [refreshUser])
+  );
 
   function handleLogout() {
     Alert.alert("Logout", "Are you sure you want to sign out?", [

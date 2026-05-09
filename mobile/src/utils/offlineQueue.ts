@@ -74,10 +74,7 @@ function describeError(error: unknown) {
 export function isRetryableNetworkError(error: unknown) {
   if (!axios.isAxiosError(error)) return false;
 
-  if (!error.response) return true;
-
-  const status = error.response.status;
-  return status === 408 || status === 425 || status === 429 || status >= 500;
+  return !error.response;
 }
 
 export function isOfflineQueueResult(
@@ -195,12 +192,6 @@ export async function createListingWithOfflineQueue(data: CreateListingInput) {
     clientRequestId: data.clientRequestId || createRequestId("create-listing"),
   };
 
-  if (!(await hasUsableConnection())) {
-    const queued = await queueCreateListing(payload);
-    flushOfflineQueue().catch(() => undefined);
-    return queued;
-  }
-
   try {
     return await listingsApi.create(payload);
   } catch (error) {
@@ -218,12 +209,6 @@ export async function createOrderWithOfflineQueue(data: CreateOrderInput) {
     ...data,
     clientRequestId: data.clientRequestId || createRequestId("create-order"),
   };
-
-  if (!(await hasUsableConnection())) {
-    const queued = await queueCreateOrder(payload);
-    flushOfflineQueue().catch(() => undefined);
-    return queued;
-  }
 
   try {
     return await ordersApi.create(payload);
