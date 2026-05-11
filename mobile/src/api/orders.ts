@@ -1,13 +1,16 @@
 import api from "./client";
 import type { Order } from "../types";
 
+export interface CreateOrderInput {
+  listingId: string;
+  quantity: number;
+  deliveryAddress?: string;
+  notes?: string;
+  clientRequestId?: string;
+}
+
 export const ordersApi = {
-  create(data: {
-    listingId: string;
-    quantity: number;
-    deliveryAddress?: string;
-    notes?: string;
-  }) {
+  create(data: CreateOrderInput) {
     return api.post<{ order: Order }>("/orders", data);
   },
 

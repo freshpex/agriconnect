@@ -13,6 +13,7 @@ export interface IOrder extends Document {
   buyerPhone: string;
   deliveryAddress?: string;
   notes?: string;
+  clientRequestId?: string;
   confirmedAt?: Date;
   deliveredAt?: Date;
   createdAt: Date;
@@ -37,6 +38,7 @@ const OrderSchema = new Schema<IOrder>(
     buyerPhone: { type: String, required: true },
     deliveryAddress: String,
     notes: { type: String, maxlength: 300 },
+    clientRequestId: { type: String, trim: true, maxlength: 80 },
     confirmedAt: Date,
     deliveredAt: Date,
   },
@@ -45,5 +47,12 @@ const OrderSchema = new Schema<IOrder>(
 
 OrderSchema.index({ buyer: 1, status: 1 });
 OrderSchema.index({ seller: 1, status: 1 });
+OrderSchema.index(
+  { buyer: 1, clientRequestId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { clientRequestId: { $type: "string" } },
+  }
+);
 
 export const Order = mongoose.model<IOrder>("Order", OrderSchema);

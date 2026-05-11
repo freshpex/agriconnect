@@ -261,7 +261,9 @@ export const getDeviceReachability = async (
     reachabilityStatus,
     isOnline:
       reachabilityStatus === "CONNECTED_DATA" ||
-      reachabilityStatus === "CONNECTED_SMS",
+      reachabilityStatus === "CONNECTED_SMS" ||
+      reachabilityStatus === "REACHABLE_DATA" ||
+      reachabilityStatus === "REACHABLE_SMS",
     method,
   });
 };

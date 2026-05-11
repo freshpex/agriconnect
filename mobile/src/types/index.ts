@@ -16,6 +16,7 @@ export interface User {
   accountTypeChangeRequest?: AccountTypeChangeRequest;
   kycVerified: boolean;
   simSwapChecked: boolean;
+  simSwapLastCheck?: string;
   numberVerified: boolean;
   locationVerified: boolean;
   farmCoordinates?: {
@@ -60,6 +61,7 @@ export interface Listing {
   trustScore?: number;
   trustDecision?: "approve" | "review" | "block";
   reviewStatus?: "pending" | "approved" | "rejected";
+  clientRequestId?: string;
   active: boolean;
   views: number;
   createdAt: string;
@@ -87,6 +89,7 @@ export interface Order {
   buyerPhone: string;
   deliveryAddress?: string;
   notes?: string;
+  clientRequestId?: string;
   confirmedAt?: string;
   deliveredAt?: string;
   createdAt: string;

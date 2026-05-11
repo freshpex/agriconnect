@@ -64,13 +64,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function login(phone: string, password: string) {
-    const res = await authApi.login({ phone, password });
-    const { token: newToken, user: newUser } = res.data;
+  async function persistAuth(newToken: string, newUser: User) {
     await storage.setToken(newToken);
     await storage.setUser(JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
+
+    try {
+      const res = await authApi.getMe();
+      setUser(res.data.user);
+      await storage.setUser(JSON.stringify(res.data.user));
+    } catch {
+      // The auth response is already usable; a later app launch will refresh it.
+    }
+  }
+
+  async function login(phone: string, password: string) {
+    const res = await authApi.login({ phone, password });
+    const { token: newToken, user: newUser } = res.data;
+    await persistAuth(newToken, newUser);
   }
 
   async function register(
@@ -81,10 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) {
     const res = await authApi.register({ name, phone, password, role });
     const { token: newToken, user: newUser } = res.data;
-    await storage.setToken(newToken);
-    await storage.setUser(JSON.stringify(newUser));
-    setToken(newToken);
-    setUser(newUser);
+    await persistAuth(newToken, newUser);
   }
 
   async function logout() {

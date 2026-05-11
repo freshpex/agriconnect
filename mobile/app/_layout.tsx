@@ -3,6 +3,7 @@ import { useEffect, useCallback } from "react";
 import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "../src/hooks/useAuth";
+import { useOfflineSync } from "../src/hooks/useOfflineSync";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -22,6 +23,7 @@ const queryClient = new QueryClient({
 
 function RootNavigator() {
   const { isLoading } = useAuth();
+  useOfflineSync();
 
   const onLayoutReady = useCallback(async () => {
     if (!isLoading) {

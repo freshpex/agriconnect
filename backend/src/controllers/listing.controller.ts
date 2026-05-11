@@ -23,6 +23,35 @@ export const createListing = async (
     throw new ApiError("Only farmer accounts can create listings", 403);
   }
 
+  const {
+    cropName,
+    category,
+    quantity,
+    unit,
+    pricePerUnit,
+    currency,
+    description,
+    images,
+    latitude,
+    longitude,
+    farmAddress,
+    harvestDate,
+    clientRequestId,
+  } = req.body;
+
+  if (clientRequestId) {
+    const existingListing = await Listing.findOne({
+      farmer: req.user!.id,
+      clientRequestId,
+    }).lean();
+
+    if (existingListing) {
+      res.json({ listing: existingListing });
+      return;
+    }
+  }
+
+  const simSwapCheckedAt = new Date();
   try {
     const simResult = await checkSimSwap(farmer.phone, 24);
     if (simResult.swapped) {
@@ -61,20 +90,9 @@ export const createListing = async (
     });
   }
 
-  const {
-    cropName,
-    category,
-    quantity,
-    unit,
-    pricePerUnit,
-    currency,
-    description,
-    images,
-    latitude,
-    longitude,
-    farmAddress,
-    harvestDate,
-  } = req.body;
+  farmer.simSwapChecked = true;
+  farmer.simSwapLastCheck = simSwapCheckedAt;
+  await farmer.save();
 
   const lat = latitude ? parseFloat(latitude) : undefined;
   const lng = longitude ? parseFloat(longitude) : undefined;
@@ -140,7 +158,8 @@ export const createListing = async (
     trustScore: trustResult.score,
     trustDecision: trustResult.decision,
     reviewStatus: trustResult.decision === "review" ? "pending" : "approved",
-    active: trustResult.decision === "review" ? false : true,
+    clientRequestId,
+    active: true,
   };
 
   if (lat !== undefined && lng !== undefined) {
