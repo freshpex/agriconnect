@@ -41,6 +41,7 @@ export interface User {
   accountTypeChangeRequest?: AccountTypeChangeRequest;
   kycVerified?: boolean;
   simSwapChecked?: boolean;
+  simSwapLastCheck?: string;
   numberVerified?: boolean;
   locationVerified?: boolean;
   farmCoordinates?: Coordinates;

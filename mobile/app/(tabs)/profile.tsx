@@ -135,7 +135,7 @@ export default function ProfileScreen() {
         />
         <VerificationRow
           label="SIM Swap Check"
-          verified={user?.simSwapChecked ?? false}
+          verified={Boolean(user?.simSwapChecked || user?.simSwapLastCheck)}
           description="Checked automatically on login"
         />
       </View>

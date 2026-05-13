@@ -10,6 +10,9 @@ import { recordVerificationAudit } from "../utils/verificationAudit";
 const jwtOptions = { expiresIn: config.jwt.expiresIn } as SignOptions;
 
 function serializeUser(farmer: IFarmer) {
+  const simSwapChecked =
+    farmer.simSwapChecked || Boolean(farmer.simSwapLastCheck);
+
   return {
     id: farmer._id,
     name: farmer.name,
@@ -17,7 +20,7 @@ function serializeUser(farmer: IFarmer) {
     role: farmer.role,
     accountTypeChangeRequest: farmer.accountTypeChangeRequest,
     kycVerified: farmer.kycVerified,
-    simSwapChecked: farmer.simSwapChecked,
+    simSwapChecked,
     simSwapLastCheck: farmer.simSwapLastCheck,
     numberVerified: farmer.numberVerified,
     locationVerified: farmer.locationVerified,
