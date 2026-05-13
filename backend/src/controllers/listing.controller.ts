@@ -7,6 +7,21 @@ import { checkSimSwap } from "../services/nac";
 import { evaluateTrustScore } from "../services/nac/trustScore";
 import { recordVerificationAudit } from "../utils/verificationAudit";
 
+function parseOptionalCoordinate(value: unknown): number | undefined {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : undefined;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+}
+
 /**
  * Create a new produce listing.
  * Per myidea.md: SIM Swap check before listing creation,
@@ -94,21 +109,23 @@ export const createListing = async (
   farmer.simSwapLastCheck = simSwapCheckedAt;
   await farmer.save();
 
-  const lat = latitude ? parseFloat(latitude) : undefined;
-  const lng = longitude ? parseFloat(longitude) : undefined;
+  const lat = parseOptionalCoordinate(latitude);
+  const lng = parseOptionalCoordinate(longitude);
+  const hasCoordinates = lat !== undefined && lng !== undefined;
   const radiusMeters = 5000;
 
-  const trustResult = await evaluateTrustScore({
-    phoneNumber: farmer.phone,
-    kycData: farmer.kycData
-      ? {
-          nationalId: farmer.kycData.nationalId,
-          fullName: farmer.kycData.fullName,
-          dateOfBirth: farmer.kycData.dateOfBirth,
-        }
-      : undefined,
-    location:
-      lat !== undefined && lng !== undefined
+  let trustResult: Awaited<ReturnType<typeof evaluateTrustScore>>;
+  try {
+    trustResult = await evaluateTrustScore({
+      phoneNumber: farmer.phone,
+      kycData: farmer.kycData
+        ? {
+            nationalId: farmer.kycData.nationalId,
+            fullName: farmer.kycData.fullName,
+            dateOfBirth: farmer.kycData.dateOfBirth,
+          }
+        : undefined,
+      location: hasCoordinates
         ? { latitude: lat, longitude: lng, radius: radiusMeters }
         : farmer.farmCoordinates
           ? {
@@ -117,8 +134,30 @@ export const createListing = async (
               radius: radiusMeters,
             }
           : undefined,
-    numberVerified: farmer.numberVerified,
-  });
+      numberVerified: farmer.numberVerified,
+    });
+  } catch (err) {
+    console.warn(
+      "Trust score evaluation unavailable during listing creation:",
+      farmer.phone,
+      err instanceof Error ? err.message : String(err)
+    );
+    trustResult = {
+      score: 50,
+      decision: "review",
+      signals: [
+        {
+          name: "trust_score_service",
+          status: "unavailable",
+          penalty: 0,
+          details: {
+            message:
+              "Trust-score services unavailable; listing queued for manual review.",
+          },
+        },
+      ],
+    };
+  }
 
   await recordVerificationAudit({
     userId: farmer._id.toString(),
@@ -162,10 +201,11 @@ export const createListing = async (
     active: true,
   };
 
-  if (lat !== undefined && lng !== undefined) {
+  if (hasCoordinates) {
+    const coordinates = [lng as number, lat as number] as [number, number];
     listingData.coordinates = {
       type: "Point",
-      coordinates: [lng, lat],
+      coordinates,
     };
   }
 

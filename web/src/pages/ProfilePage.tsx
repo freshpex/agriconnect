@@ -490,7 +490,7 @@ export function ProfilePage() {
           <VerificationCard
             title="SIM swap"
             icon={<Smartphone className="h-5 w-5" />}
-            verified={Boolean(user.simSwapChecked)}
+            verified={Boolean(user.simSwapChecked || user.simSwapLastCheck)}
             description="Checked automatically during auth"
           />
         </aside>
